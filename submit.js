@@ -37,12 +37,12 @@ document.getElementById("event-form").addEventListener("submit", async (e) => {
 
   if (selectedCategories.length === 0) {
     messageEl.classList.add("error");
-    messageEl.textContent = "Please choose at least one category.";
+    messageEl.textContent = "Bitte wähle mindestens eine Kategorie aus.";
     return;
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = "Submitting...";
+  submitBtn.textContent = "Wird gesendet...";
 
   const newEvent = {
     event_name: document.getElementById("event_name").value.trim(),
@@ -61,17 +61,17 @@ document.getElementById("event-form").addEventListener("submit", async (e) => {
   const { error } = await client.from("events").insert([newEvent]);
 
   submitBtn.disabled = false;
-  submitBtn.textContent = "Submit event";
+  submitBtn.textContent = "Event einreichen";
 
   if (error) {
     console.error(error);
     messageEl.classList.add("error");
-    messageEl.textContent = "Something went wrong submitting your event. Please try again.";
+    messageEl.textContent = "Beim Einreichen ist etwas schiefgelaufen. Bitte versuch es noch einmal.";
     return;
   }
 
   messageEl.classList.add("success");
-  messageEl.textContent = "Thanks! Your event has been submitted and is waiting for review. It'll appear on the site once approved.";
+  messageEl.textContent = "Danke! Dein Event wurde eingereicht und wird geprüft. Es erscheint auf der Website, sobald es freigegeben wurde.";
   document.getElementById("event-form").reset();
   charCount.textContent = "0";
 });
