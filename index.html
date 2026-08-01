@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Events</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-logo"><span class="dot"></span> Local Events</div>
+  <a href="submit.html" class="btn btn-primary">Submit an event</a>
+</header>
+
+<section class="hero">
+  <h1>What's happening nearby</h1>
+  <p>Cultural, family-friendly, and community events near you — reviewed and picked by hand.</p>
+</section>
+
+<nav class="filters" id="filters">
+  <button class="chip active" data-category="all">All</button>
+</nav>
+
+<main class="event-list" id="event-list">
+  <!-- Events load here -->
+</main>
+
+<div class="empty-state" id="empty-state" style="display:none">
+  <span class="emoji">🗓️</span>
+  <p>No events match that filter yet. Check back soon, or <a href="submit.html" style="color:var(--coral); font-weight:700;">be the first to submit one</a>.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="categories.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
