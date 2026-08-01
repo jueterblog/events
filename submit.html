@@ -3,65 +3,68 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Submit an Event — Local Events</title>
+<title>Event einreichen — Jüterblog</title>
+<link rel="icon" type="image/png" href="logo-mark.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="site-header">
-  <a href="index.html" class="site-logo"><span class="dot"></span> Local Events</a>
-  <a href="index.html" class="btn btn-ghost">← Back to events</a>
+  <a href="index.html" class="site-logo">
+    <img src="wordmark.png" alt="Jüterblog" class="logo-img">
+  </a>
+  <a href="index.html" class="btn btn-outline">← Zurück zu den Events</a>
 </header>
 
 <section class="hero">
-  <h1>Submit an event</h1>
-  <p>Tell us what's happening. We review every submission before it goes live — usually within a few days.</p>
+  <h1>Event einreichen</h1>
+  <p>Erzähl uns, was los ist. Wir prüfen jede Einreichung, bevor sie online geht — normalerweise innerhalb weniger Tage.</p>
 </section>
 
 <div class="form-wrap">
   <div class="form-card">
     <form id="event-form">
 
-      <label for="event_name">Event name</label>
+      <label for="event_name">Name der Veranstaltung</label>
       <input type="text" id="event_name" required maxlength="120">
 
-      <label>Categories <span class="hint">(choose up to 3)</span></label>
+      <label>Kategorien <span class="hint">(bis zu 3 auswählen)</span></label>
       <div class="category-picker" id="category-picker"></div>
 
       <div class="row-2">
         <div>
-          <label for="event_date">Date</label>
+          <label for="event_date">Datum</label>
           <input type="date" id="event_date" required>
         </div>
         <div>
-          <label for="start_time">Start time</label>
+          <label for="start_time">Beginn</label>
           <input type="time" id="start_time" required>
         </div>
       </div>
 
-      <label for="end_time">End time <span class="hint">(optional)</span></label>
+      <label for="end_time">Ende <span class="hint">(optional)</span></label>
       <input type="time" id="end_time">
 
-      <label for="description">Description <span class="hint">(max 500 characters)</span></label>
+      <label for="description">Beschreibung <span class="hint">(max. 500 Zeichen)</span></label>
       <textarea id="description" required maxlength="500"></textarea>
       <div class="char-count"><span id="char-count">0</span>/500</div>
 
-      <label for="link">Link <span class="hint">(tickets, event page, etc. — optional)</span></label>
+      <label for="link">Link <span class="hint">(Tickets, Event-Seite, etc. — optional)</span></label>
       <input type="url" id="link" placeholder="https://">
 
       <div class="checkbox-row">
         <input type="checkbox" id="is_free">
-        <label for="is_free">This event is free</label>
+        <label for="is_free">Diese Veranstaltung ist kostenlos</label>
       </div>
 
-      <label for="submitter_name">Your name</label>
+      <label for="submitter_name">Dein Name</label>
       <input type="text" id="submitter_name" required maxlength="80">
 
-      <label for="submitter_email">Your email <span class="hint">(not published — for questions only)</span></label>
+      <label for="submitter_email">Deine E-Mail <span class="hint">(wird nicht veröffentlicht — nur für Rückfragen)</span></label>
       <input type="email" id="submitter_email" required>
 
       <div class="submit-row">
-        <button type="submit" class="btn btn-primary" id="submit-btn">Submit event</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Event einreichen</button>
       </div>
 
       <div class="form-message" id="form-message"></div>

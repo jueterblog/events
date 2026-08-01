@@ -3,19 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Local Events</title>
+<title>Jüterblog</title>
+<link rel="icon" type="image/png" href="logo-mark.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="site-header">
-  <div class="site-logo"><span class="dot"></span> Local Events</div>
-  <a href="submit.html" class="btn btn-primary">Submit an event</a>
+  <a href="index.html" class="site-logo">
+    <img src="wordmark.png" alt="Jüterblog" class="logo-img">
+  </a>
+  <a href="submit.html" class="btn btn-outline">Event einreichen</a>
 </header>
 
 <section class="hero">
-  <h1>What's happening nearby</h1>
-  <p>Cultural, family-friendly, and community events near you — reviewed and picked by hand.</p>
+  <h1>Kuratierte Events in Jüterbog und Umgebung</h1>
+  <p>Kulturelle, familienfreundliche und Community-Events in deiner Nähe — von Hand ausgewählt und geprüft.</p>
 </section>
 
 <nav class="filters" id="filters">
@@ -28,7 +31,7 @@
 
 <div class="empty-state" id="empty-state" style="display:none">
   <span class="emoji">🗓️</span>
-  <p>No events match that filter yet. Check back soon, or <a href="submit.html" style="color:var(--coral); font-weight:700;">be the first to submit one</a>.</p>
+  <p>Für diesen Filter gibt es noch keine Events. Schau bald wieder vorbei oder <a href="submit.html" style="color:var(--text); font-weight:700;">reiche als Erste:r ein Event ein</a>.</p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
