@@ -5,47 +5,47 @@
 
 const CATEGORIES = [
   "Musik",
-  "Theater",
+  "Theater & Bühne",
   "Kino",
   "Kids",
-  "Nature",
+  "Natur & Ausflüge",
   "Community",
-  "Food & Drink",
-  "Markets & Fairs",
+  "Essen & Trinken",
+  "Märkte & Feste",
   "Workshops",
-  "Art & Exhibitions",
-  "Sports",
+  "Kunst & Ausstellungen",
+  "Sport & Bewegung",
   "Other"
 ];
 
 // Color for each category's tag. Options: --accent, --purple, --orange, --teal, --pink, --grey
 const CATEGORY_COLORS = {
   "Musik": "var(--purple)",
-  "Theater": "var(--pink)",
+  "Theater & Bühne": "var(--pink)",
   "Kino": "var(--teal)",
   "Kids": "var(--accent)",
-  "Nature": "var(--accent)",
+  "Natur & Ausflüge": "var(--accent)",
   "Community": "var(--teal)",
-  "Food & Drink": "var(--orange)",
-  "Markets & Fairs": "var(--orange)",
+  "Essen & Trinken": "var(--orange)",
+  "Märkte & Feste": "var(--orange)",
   "Workshops": "var(--teal)",
-  "Art & Exhibitions": "var(--pink)",
-  "Sports": "var(--accent)",
+  "Kunst & Ausstellungen": "var(--pink)",
+  "Sport & Bewegung": "var(--accent)",
   "Other": "var(--grey)"
 };
 
 // A simple symbol per category, shown next to its name
 const CATEGORY_ICONS = {
   "Musik": "🎵",
-  "Theater": "🎭",
+  "Theater & Bühne": "🎭",
   "Kino": "🎬",
   "Kids": "🧒",
-  "Nature": "🌿",
+  "Natur & Ausflüge": "🌿",
   "Community": "🤝",
-  "Food & Drink": "🍽️",
-  "Markets & Fairs": "🛍️",
+  "Essen & Trinken": "🍽️",
+  "Märkte & Feste": "🛍️",
   "Workshops": "🛠️",
-  "Art & Exhibitions": "🎨",
-  "Sports": "⚽",
+  "Kunst & Ausstellungen": "🎨",
+  "Sport & Bewegung": "⚽",
   "Other": "✨"
 };
