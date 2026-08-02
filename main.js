@@ -91,6 +91,9 @@ function renderEvents() {
     if (event.is_barrierfrei) statusLabels.push("barrierefrei");
     const statusHtml = statusLabels.map(label => `<span>${label}</span>`).join('');
 
+    const mapsQuery = encodeURIComponent(`${event.location}, ${event.address}`);
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+
     const card = document.createElement("article");
     card.className = "event-card";
     card.innerHTML = `
@@ -100,11 +103,11 @@ function renderEvents() {
         <div class="month">${month}</div>
       </div>
       <div class="event-body">
+        <p class="event-cats">${escapeHtml(categoryLine)}</p>
         <div class="event-top-row">
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
         </div>
-        <p class="event-cats">${escapeHtml(categoryLine)}</p>
-        <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · ${escapeHtml(event.location)}, ${escapeHtml(event.address)}</div>
+        <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · <a class="event-link" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         <p class="event-desc">${escapeHtml(event.description)}</p>
         ${event.is_barrierfrei && event.barrierfrei_info ? `<p class="event-desc">${escapeHtml(event.barrierfrei_info)}</p>` : ''}
         ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a>` : ''}
