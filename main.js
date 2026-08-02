@@ -104,7 +104,7 @@ function renderEvents() {
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
         </div>
         <p class="event-cats">${escapeHtml(categoryLine)}</p>
-        <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)}</div>
+        <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · ${escapeHtml(event.location)}, ${escapeHtml(event.address)}</div>
         <p class="event-desc">${escapeHtml(event.description)}</p>
         ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a>` : ''}
       </div>

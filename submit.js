@@ -50,6 +50,8 @@ document.getElementById("event-form").addEventListener("submit", async (e) => {
     event_date: document.getElementById("event_date").value,
     start_time: document.getElementById("start_time").value,
     end_time: document.getElementById("end_time").value || null,
+    location: document.getElementById("location").value.trim(),
+    address: document.getElementById("address").value.trim(),
     description: descField.value.trim(),
     link: document.getElementById("link").value.trim() || null,
     is_free: document.getElementById("is_free").checked,
