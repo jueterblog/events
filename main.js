@@ -91,7 +91,7 @@ function renderEvents() {
     if (event.is_barrierfrei) statusLabels.push("barrierefrei");
     const statusHtml = statusLabels.map(label => `<span>${label}</span>`).join('');
 
-    const mapsQuery = encodeURIComponent(`${event.location}, ${event.address}`);
+    const mapsQuery = encodeURIComponent(event.address);
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
 
     const card = document.createElement("article");
