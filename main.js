@@ -87,6 +87,7 @@ function renderEvents() {
 
     const catParts = (event.categories || []).map(cat => cat);
     if (event.is_free) catParts.push("kostenlos");
+    if (event.is_barrierfrei) catParts.push("barrierefrei");
     const categoryLine = catParts.join(' · ');
 
     const card = document.createElement("article");
@@ -106,6 +107,7 @@ function renderEvents() {
         <p class="event-cats">${escapeHtml(categoryLine)}</p>
         <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · ${escapeHtml(event.location)}, ${escapeHtml(event.address)}</div>
         <p class="event-desc">${escapeHtml(event.description)}</p>
+        ${event.is_barrierfrei && event.barrierfrei_info ? `<p class="event-desc">${escapeHtml(event.barrierfrei_info)}</p>` : ''}
         ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a>` : ''}
       </div>
     `;

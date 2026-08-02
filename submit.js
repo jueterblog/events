@@ -55,6 +55,8 @@ document.getElementById("event-form").addEventListener("submit", async (e) => {
     description: descField.value.trim(),
     link: document.getElementById("link").value.trim() || null,
     is_free: document.getElementById("is_free").checked,
+    is_barrierfrei: document.getElementById("is_barrierfrei").checked,
+    barrierfrei_info: document.getElementById("barrierfrei_info").value.trim(),
     submitter_name: document.getElementById("submitter_name").value.trim(),
     submitter_email: document.getElementById("submitter_email").value.trim(),
     status: "pending"
