@@ -24,6 +24,7 @@
 
 <section class="hero">
   <p>Kuratierter Eventkalender für Jüterbog und Umgebung.</p>
+  <p class="love-tagline">Mit Liebe ausgewählt für ein offenes und vielfältiges Jüterbog.</p>
 </section>
 
 <nav class="filters" id="filters">
@@ -38,9 +39,52 @@
   <p>Für diesen Filter gibt es noch keine Events.</p>
 </div>
 
+<footer class="site-footer">
+  <div class="footer-links">
+    <button type="button" class="footer-link" id="about-link">About Us</button>
+    <a href="mailto:jueterblog@gmail.com" class="footer-link">Contact Us</a>
+  </div>
+  <p class="copyright">© 2026 Jüterbog</p>
+</footer>
+
+<div class="modal-overlay" id="about-modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
+    <button type="button" class="modal-close" id="modal-close" aria-label="Schließen">×</button>
+    <p><strong>Jüterblog</strong> ist kein vollständiger Veranstaltungskalender, sondern eine persönliche redaktionelle Auswahl. Wir stellen Veranstaltungen vor, die Gemeinschaft fördern, Kultur erlebbar machen, Familien und Kinder ansprechen oder das demokratische und vielfältige Miteinander in und um Jüterbog stärken.</p>
+    <p>Keinen Platz haben Veranstaltungen oder Inhalte, die Menschen aufgrund ihrer Herkunft, Religion, ihres Geschlechts, ihrer sexuellen Orientierung, ihrer Geschlechtsidentität, einer Behinderung oder anderer Merkmale diskriminieren oder ausgrenzen.</p>
+    <p>Nicht jede eingereichte Veranstaltung wird veröffentlicht. Die Auswahl erfolgt nach unserer redaktionellen Einschätzung und den Werten, für die <strong>Jüterblog</strong> steht.</p>
+    <p class="modal-en"><strong>Jüterblog</strong> is not a comprehensive event calendar, but a personally curated editorial selection. We feature events that strengthen community, celebrate culture, welcome families and children, and contribute to an open, democratic, and diverse community in and around Jüterbog.</p>
+    <p class="modal-en">We do not publish events or content that discriminate against or exclude people on the basis of their ethnicity, religion, gender, sexual orientation, gender identity, disability, or any other protected characteristic.</p>
+    <p class="modal-en">Not every submitted event will be published. Our selections reflect <strong>Jüterblog</strong>'s editorial values and the kind of community we aim to support.</p>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="categories.js"></script>
 <script src="main.js"></script>
+<script>
+  const aboutModal = document.getElementById('about-modal');
+  const aboutLink = document.getElementById('about-link');
+  const modalClose = document.getElementById('modal-close');
+
+  function openAboutModal() {
+    aboutModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAboutModal() {
+    aboutModal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  aboutLink.addEventListener('click', openAboutModal);
+  modalClose.addEventListener('click', closeAboutModal);
+  aboutModal.addEventListener('click', (e) => {
+    if (e.target === aboutModal) closeAboutModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !aboutModal.hidden) closeAboutModal();
+  });
+</script>
 </body>
 </html>
