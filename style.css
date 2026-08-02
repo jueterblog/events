@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap');
-/* NOTE: "Anton" is a free stand-in for Lovelo (a paid font).
-   Once you have Lovelo's font files, see the @font-face block
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+/* NOTE: "Montserrat" is a free stand-in for Gotham (a paid font).
+   Once you have Gotham's font files, see the @font-face block
    below to swap it in — just uncomment and point to your files. */
 
 /*
 @font-face {
-  font-family: 'Lovelo';
-  src: url('fonts/Lovelo-Black.woff2') format('woff2');
+  font-family: 'Gotham';
+  src: url('fonts/Gotham-Bold.woff2') format('woff2');
   font-weight: 700;
 }
 */
@@ -25,7 +25,7 @@
   --pink: #E85D9C;
   --grey: #6E7B85;
 
-  --display-font: 'Anton', sans-serif; /* swap to 'Lovelo' once you have the files */
+  --display-font: 'Montserrat', sans-serif; /* swap to 'Gotham' once you have the files */
 
   --radius-lg: 24px;
   --radius-md: 16px;
@@ -41,7 +41,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -80,7 +80,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .btn {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 10px 20px;
@@ -95,8 +95,8 @@ a { color: inherit; text-decoration: none; }
 .btn:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
 
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: var(--text);
+  color: var(--bg);
   box-shadow: var(--shadow);
 }
 .btn-primary:hover { box-shadow: var(--shadow-hover); }
@@ -136,7 +136,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .hero p {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   font-weight: 700;
   color: var(--text);
@@ -157,7 +157,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .chip {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   font-size: 13px;
   padding: 8px 16px;
@@ -205,7 +205,7 @@ a { color: inherit; text-decoration: none; }
 .date-badge {
   flex-shrink: 0;
   width: 64px;
-  background: var(--accent);
+  background: var(--bg);
   border: 2px solid var(--text);
   border-radius: var(--radius-sm);
   text-align: center;
@@ -214,7 +214,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .date-badge .weekday {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 11px;
   text-transform: uppercase;
@@ -231,7 +231,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .date-badge .month {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   font-size: 12px;
   color: var(--text);
@@ -245,7 +245,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .event-title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-weight: 800;
   font-size: 19px;
   text-transform: uppercase;
@@ -326,7 +326,7 @@ label:first-child { margin-top: 0; }
 
 input, select, textarea {
   width: 100%;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 15px;
   padding: 12px 14px;
   border-radius: var(--radius-sm);
