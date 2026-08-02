@@ -108,8 +108,11 @@ function renderEvents() {
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
         </div>
         <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · <a class="event-link" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
-        <p class="event-desc">${escapeHtml(event.description)}</p>
-        ${event.is_barrierfrei && event.barrierfrei_info ? `<p class="event-desc">${escapeHtml(event.barrierfrei_info)}</p>` : ''}
+        <div class="event-details">
+          <p class="event-desc">${escapeHtml(event.description)}</p>
+          ${event.is_barrierfrei && event.barrierfrei_info ? `<p class="event-desc">${escapeHtml(event.barrierfrei_info)}</p>` : ''}
+        </div>
+        <button type="button" class="desc-toggle">mehr anzeigen</button>
         ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a>` : ''}
       </div>
       ${statusHtml ? `<div class="event-status">${statusHtml}</div>` : ''}
@@ -130,3 +133,10 @@ function escapeAttr(str) {
 
 buildFilterChips();
 fetchEvents();
+
+document.getElementById("event-list").addEventListener("click", (e) => {
+  if (!e.target.classList.contains("desc-toggle")) return;
+  const details = e.target.previousElementSibling;
+  const isOpen = details.classList.toggle("open");
+  e.target.textContent = isOpen ? "weniger anzeigen" : "mehr anzeigen";
+});
