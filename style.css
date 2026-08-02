@@ -15,8 +15,6 @@
   --bg: #DCF4A2;
   --surface: #FFFFFF;
   --text: #0055A4;
-  --text-soft: #3D7BB0;
-  --border: #C3E888;
 
   --accent: #43B262;
   --orange: #FF8C42;
@@ -128,12 +126,6 @@ a { color: inherit; text-decoration: none; }
   color: var(--bg);
 }
 
-.btn-ghost {
-  background: transparent;
-  color: var(--text);
-  border: 2px solid var(--border);
-}
-
 /* ---------- Hero ---------- */
 
 .hero {
@@ -232,11 +224,12 @@ a { color: inherit; text-decoration: none; }
 .date-badge {
   flex-shrink: 0;
   width: 70px;
-  background: var(--bg);
-  border: 2px solid var(--text);
-  border-radius: var(--radius-sm);
+  height: 102px;
+  background-image: url('date-badge-shape.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   text-align: center;
-  padding: 10px 4px;
+  padding: 20px 8px;
 }
 
 .date-badge .day {
@@ -244,7 +237,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   font-size: 24px;
   line-height: 1.2;
-  color: var(--text);
+  color: var(--bg);
 }
 
 .date-badge .dash {
@@ -252,7 +245,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   font-size: 24px;
   line-height: 1.2;
-  color: var(--text);
+  color: var(--bg);
 }
 
 .date-badge .month {
@@ -260,7 +253,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   font-size: 24px;
   line-height: 1.2;
-  color: var(--text);
+  color: var(--bg);
 }
 
 .event-body { flex: 1; min-width: 0; }
@@ -482,6 +475,5 @@ textarea { resize: vertical; min-height: 90px; }
 
 @media (max-width: 600px) {
   .event-card { flex-direction: column; }
-  .date-badge { width: auto; display: flex; align-items: baseline; gap: 6px; padding: 8px 12px; }
   .row-2 { flex-direction: column; gap: 0; }
 }
