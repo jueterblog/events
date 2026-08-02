@@ -82,7 +82,7 @@ function renderEvents() {
   }
   emptyEl.style.display = "none";
 
-  filtered.forEach(event => {
+  filtered.forEach((event, index) => {
     const { weekday, day, month } = formatDateBadge(event.event_date);
 
     const catParts = (event.categories || []).map(cat => cat);
@@ -92,10 +92,12 @@ function renderEvents() {
     const card = document.createElement("article");
     card.className = "event-card";
     card.innerHTML = `
-      <div class="date-badge">
-        <div class="weekday">${weekday}</div>
-        <div class="day">${day}</div>
-        <div class="month">${month}</div>
+      <div class="date-badge-outer">
+        <div class="date-badge">
+          <div class="weekday">${weekday}</div>
+          <div class="day">${day}</div>
+          <div class="month">${month}</div>
+        </div>
       </div>
       <div class="event-body">
         <div class="event-top-row">
@@ -104,10 +106,16 @@ function renderEvents() {
         <p class="event-cats">${escapeHtml(categoryLine)}</p>
         <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)}</div>
         <p class="event-desc">${escapeHtml(event.description)}</p>
-        ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">More info →</a>` : ''}
+        ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a>` : ''}
       </div>
     `;
     listEl.appendChild(card);
+
+    if (index < filtered.length - 1) {
+      const divider = document.createElement("div");
+      divider.className = "event-divider";
+      listEl.appendChild(divider);
+    }
   });
 }
 
