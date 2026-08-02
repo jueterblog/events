@@ -13,34 +13,37 @@
   <a href="index.html" class="header-left">
     <img src="wordmark.png" alt="Jüterblog" class="logo-img">
   </a>
-  <div class="header-right">
+  <div class="header-center">
     <img src="logo-mark.png" alt="" class="logo-mark">
+  </div>
+  <div class="header-right">
     <a href="index.html" class="btn btn-outline">← Zurück zu den Events</a>
   </div>
 </header>
 
 <section class="hero">
   <h1>Event einreichen</h1>
-  <p>Erzähl uns, was los ist. Wir prüfen jede Einreichung, bevor sie online geht — normalerweise innerhalb weniger Tage.</p>
+  <p>Erzähl uns, was los ist. Wir prüfen jede Einreichung, bevor sie online geht; normalerweise innerhalb weniger Tage.</p>
+  <p class="form-notice">Wir kuratieren Events mit Anspruch auf Inklusion: Rassismus, Antisemitismus, Queer-, Trans- und Homofeindlichkeit, Sexismus, Ableismus sowie jede andere Form von Diskriminierung haben hier keinen Platz.</p>
 </section>
 
 <div class="form-wrap">
   <div class="form-card">
     <form id="event-form">
 
-      <label for="event_name">Name der Veranstaltung</label>
+      <label for="event_name">Name der Veranstaltung *</label>
       <input type="text" id="event_name" required maxlength="120">
 
-      <label>Kategorien <span class="hint">(bis zu 3 auswählen)</span></label>
+      <label>Kategorien * <span class="hint">(bis zu 3 auswählen)</span></label>
       <div class="category-picker" id="category-picker"></div>
 
       <div class="row-2">
         <div>
-          <label for="event_date">Datum</label>
+          <label for="event_date">Datum *</label>
           <input type="date" id="event_date" required>
         </div>
         <div>
-          <label for="start_time">Beginn</label>
+          <label for="start_time">Beginn *</label>
           <input type="time" id="start_time" required>
         </div>
       </div>
@@ -48,17 +51,17 @@
       <label for="end_time">Ende <span class="hint">(optional)</span></label>
       <input type="time" id="end_time">
 
-      <label for="location">Ort</label>
+      <label for="location">Ort *</label>
       <input type="text" id="location" required maxlength="120" placeholder="z. B. Stadthalle Jüterbog">
 
-      <label for="address">Adresse</label>
+      <label for="address">Adresse *</label>
       <input type="text" id="address" required maxlength="160" placeholder="z. B. Marktplatz 1, 14913 Jüterbog">
 
-      <label for="description">Beschreibung <span class="hint">(max. 500 Zeichen)</span></label>
+      <label for="description">Beschreibung * <span class="hint">(max. 500 Zeichen)</span></label>
       <textarea id="description" required maxlength="500"></textarea>
       <div class="char-count"><span id="char-count">0</span>/500</div>
 
-      <label for="link">Link <span class="hint">(Tickets, Event-Seite, etc. — optional)</span></label>
+      <label for="link">Link (Tickets, Event-Seite, etc.) <span class="hint">- optional</span></label>
       <input type="url" id="link" placeholder="https://">
 
       <div class="checkbox-row">
@@ -74,15 +77,17 @@
       <label for="barrierfrei_info">Barrierefreiheit <span class="hint">(optional, ein Satz)</span></label>
       <input type="text" id="barrierfrei_info" maxlength="150" placeholder="z. B. ebenerdiger Zugang, barrierefreies WC vorhanden">
 
-      <label for="submitter_name">Dein Name</label>
+      <label for="submitter_name">Dein Name *</label>
       <input type="text" id="submitter_name" required maxlength="80">
 
-      <label for="submitter_email">Deine E-Mail <span class="hint">(wird nicht veröffentlicht — nur für Rückfragen)</span></label>
+      <label for="submitter_email">Deine E-Mail * <span class="hint">(wird nicht veröffentlicht — nur für Rückfragen)</span></label>
       <input type="email" id="submitter_email" required>
 
       <div class="submit-row">
         <button type="submit" class="btn btn-primary" id="submit-btn">Event einreichen</button>
       </div>
+
+      <p class="form-legend">* = Pflichtfeld</p>
 
       <div class="form-message" id="form-message"></div>
     </form>

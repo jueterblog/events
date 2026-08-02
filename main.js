@@ -33,10 +33,9 @@ function updateActiveChip() {
 
 function formatDateBadge(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
-  const weekday = d.toLocaleDateString("en-GB", { weekday: "short" });
-  const day = d.getDate();
-  const month = d.toLocaleDateString("en-GB", { month: "short" });
-  return { weekday, day, month };
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return { day, month };
 }
 
 function formatTimeRange(start, end) {
@@ -83,7 +82,7 @@ function renderEvents() {
   emptyEl.style.display = "none";
 
   filtered.forEach((event, index) => {
-    const { weekday, day, month } = formatDateBadge(event.event_date);
+    const { day, month } = formatDateBadge(event.event_date);
 
     const catParts = (event.categories || []).map(cat => cat);
     if (event.is_free) catParts.push("kostenlos");
@@ -95,8 +94,8 @@ function renderEvents() {
     card.innerHTML = `
       <div class="date-badge-outer">
         <div class="date-badge">
-          <div class="weekday">${weekday}</div>
           <div class="day">${day}</div>
+          <div class="dash">–</div>
           <div class="month">${month}</div>
         </div>
       </div>
@@ -114,11 +113,20 @@ function renderEvents() {
     listEl.appendChild(card);
 
     if (index < filtered.length - 1) {
-      const divider = document.createElement("div");
-      divider.className = "event-divider";
-      listEl.appendChild(divider);
+      listEl.appendChild(buildDivider());
     }
   });
+}
+
+function buildDivider() {
+  const divider = document.createElement("div");
+  divider.className = "event-divider";
+  for (let i = 0; i < 24; i++) {
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    divider.appendChild(dot);
+  }
+  return divider;
 }
 
 function escapeHtml(str) {
