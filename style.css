@@ -229,22 +229,26 @@ a { color: inherit; text-decoration: none; }
   background-size: 100% 100%;
   background-repeat: no-repeat;
   text-align: center;
-  padding: 20px 8px;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
 }
 
 .date-badge .day {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 24px;
-  line-height: 1.2;
+  line-height: 0.95;
   color: var(--bg);
 }
 
 .date-badge .dash {
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
-  font-size: 24px;
-  line-height: 1.2;
+  font-size: 16px;
+  line-height: 0.8;
   color: var(--bg);
 }
 
@@ -252,7 +256,7 @@ a { color: inherit; text-decoration: none; }
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
   font-size: 24px;
-  line-height: 1.2;
+  line-height: 0.95;
   color: var(--bg);
 }
 
