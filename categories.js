@@ -33,3 +33,19 @@ const CATEGORY_COLORS = {
   "Sports": "var(--accent)",
   "Other": "var(--grey)"
 };
+
+// A simple symbol per category, shown next to its name
+const CATEGORY_ICONS = {
+  "Musik": "🎵",
+  "Theater": "🎭",
+  "Kino": "🎬",
+  "Kids": "🧒",
+  "Nature": "🌿",
+  "Community": "🤝",
+  "Food & Drink": "🍽️",
+  "Markets & Fairs": "🛍️",
+  "Workshops": "🛠️",
+  "Art & Exhibitions": "🎨",
+  "Sports": "⚽",
+  "Other": "✨"
+};

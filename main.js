@@ -41,8 +41,8 @@ function formatDateBadge(dateStr) {
 
 function formatTimeRange(start, end) {
   const fmt = t => t ? t.slice(0, 5) : "";
-  if (end) return `${fmt(start)}–${fmt(end)}`;
-  return `Starts ${fmt(start)}`;
+  if (end) return `ab ${fmt(start)} bis ${fmt(end)}`;
+  return `ab ${fmt(start)}`;
 }
 
 async function fetchEvents() {
@@ -84,9 +84,10 @@ function renderEvents() {
 
   filtered.forEach(event => {
     const { weekday, day, month } = formatDateBadge(event.event_date);
-    const categoryTags = (event.categories || [])
-      .map(cat => `<span class="tag" style="background:${CATEGORY_COLORS[cat] || 'var(--grey)'}">${escapeHtml(cat)}</span>`)
-      .join('');
+
+    const catParts = (event.categories || []).map(cat => cat);
+    if (event.is_free) catParts.push("kostenlos");
+    const categoryLine = catParts.join(' · ');
 
     const card = document.createElement("article");
     card.className = "event-card";
@@ -99,9 +100,8 @@ function renderEvents() {
       <div class="event-body">
         <div class="event-top-row">
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
-          ${categoryTags}
-          ${event.is_free ? '<span class="tag tag-free">Free</span>' : ''}
         </div>
+        <p class="event-cats">${escapeHtml(categoryLine)}</p>
         <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)}</div>
         <p class="event-desc">${escapeHtml(event.description)}</p>
         ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">More info →</a>` : ''}
