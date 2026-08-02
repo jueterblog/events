@@ -110,10 +110,10 @@ function renderEvents() {
         <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · <a class="event-link" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         <div class="event-details">
           <p class="event-desc">${escapeHtml(event.description)}</p>
+          ${event.link ? `<p style="margin:0 0 10px;"><a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a></p>` : ''}
           ${event.is_barrierfrei && event.barrierfrei_info ? `<p class="event-desc">${escapeHtml(event.barrierfrei_info)}</p>` : ''}
         </div>
         <button type="button" class="desc-toggle">mehr anzeigen</button>
-        ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a>` : ''}
       </div>
       ${statusHtml ? `<div class="event-status">${statusHtml}</div>` : ''}
     `;
