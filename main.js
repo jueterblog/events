@@ -58,7 +58,7 @@ async function fetchEvents() {
   if (error) {
     console.error("Error fetching events:", error);
     document.getElementById("event-list").innerHTML =
-      `<p style="color:var(--text-soft)">Couldn't load events right now. Please try again later.</p>`;
+      `<p style="color:var(--text)">Couldn't load events right now. Please try again later.</p>`;
     return;
   }
 
@@ -84,20 +84,20 @@ function renderEvents() {
   filtered.forEach((event, index) => {
     const { day, month } = formatDateBadge(event.event_date);
 
-    const catParts = (event.categories || []).map(cat => cat);
-    if (event.is_free) catParts.push("kostenlos");
-    if (event.is_barrierfrei) catParts.push("barrierefrei");
-    const categoryLine = catParts.join(' · ');
+    const categoryLine = (event.categories || []).join(' · ');
+
+    const statusLabels = [];
+    if (event.is_free) statusLabels.push("kostenlos");
+    if (event.is_barrierfrei) statusLabels.push("barrierefrei");
+    const statusHtml = statusLabels.map(label => `<span>${label}</span>`).join('');
 
     const card = document.createElement("article");
     card.className = "event-card";
     card.innerHTML = `
-      <div class="date-badge-outer">
-        <div class="date-badge">
-          <div class="day">${day}</div>
-          <div class="dash">–</div>
-          <div class="month">${month}</div>
-        </div>
+      <div class="date-badge">
+        <div class="day">${day}</div>
+        <div class="dash">–</div>
+        <div class="month">${month}</div>
       </div>
       <div class="event-body">
         <div class="event-top-row">
@@ -109,24 +109,10 @@ function renderEvents() {
         ${event.is_barrierfrei && event.barrierfrei_info ? `<p class="event-desc">${escapeHtml(event.barrierfrei_info)}</p>` : ''}
         ${event.link ? `<a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">mehr Infos hier</a>` : ''}
       </div>
+      ${statusHtml ? `<div class="event-status">${statusHtml}</div>` : ''}
     `;
     listEl.appendChild(card);
-
-    if (index < filtered.length - 1) {
-      listEl.appendChild(buildDivider());
-    }
   });
-}
-
-function buildDivider() {
-  const divider = document.createElement("div");
-  divider.className = "event-divider";
-  for (let i = 0; i < 24; i++) {
-    const dot = document.createElement("span");
-    dot.className = "dot";
-    divider.appendChild(dot);
-  }
-  return divider;
 }
 
 function escapeHtml(str) {

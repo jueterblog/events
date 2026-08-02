@@ -206,6 +206,20 @@ a { color: inherit; text-decoration: none; }
   gap: 16px;
 }
 
+.event-status {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.2;
+  color: var(--text);
+  text-transform: lowercase;
+}
+
 .event-card {
   background: var(--bg);
   border: 2px solid var(--text);
