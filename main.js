@@ -97,16 +97,18 @@ function renderEvents() {
     const card = document.createElement("article");
     card.className = "event-card";
     card.innerHTML = `
-      <div class="date-badge">
-        <div class="day">${day}</div>
-        <div class="dash">–</div>
-        <div class="month">${month}</div>
-      </div>
-      <div class="event-body">
-        <p class="event-cats">${escapeHtml(categoryLine)}</p>
-        <div class="event-top-row">
+      <div class="event-header">
+        <div class="date-badge">
+          <div class="day">${day}</div>
+          <div class="dash">–</div>
+          <div class="month">${month}</div>
+        </div>
+        <div class="event-title-group">
+          <p class="event-cats">${escapeHtml(categoryLine)}</p>
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
         </div>
+      </div>
+      <div class="event-body">
         <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · <a class="event-link" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         <div class="event-details">
           <p class="event-desc">${escapeHtml(event.description)}</p>

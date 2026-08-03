@@ -156,17 +156,6 @@ a { color: inherit; text-decoration: none; }
   margin: 0;
 }
 
-.love-tagline {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  font-style: italic;
-  color: var(--text);
-  line-height: 1.5;
-  max-width: 520px;
-  margin: 24px 0 0;
-}
-
 .intro-text {
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
@@ -175,16 +164,6 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.5;
   max-width: 520px;
   margin: 0;
-}
-
-.form-notice {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.5;
-  max-width: 520px;
-  margin: 24px 0 0;
 }
 
 /* ---------- Filters ---------- */
@@ -230,7 +209,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .event-status {
-  flex-shrink: 0;
+  position: absolute;
+  top: 24px;
+  right: 24px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -244,14 +225,27 @@ a { color: inherit; text-decoration: none; }
 }
 
 .event-card {
+  position: relative;
   background: var(--bg);
   border: 2px solid var(--text);
   border-radius: var(--radius-lg);
   padding: 24px;
   display: flex;
-  gap: 24px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 16px;
   transition: transform 0.2s ease;
+}
+
+.event-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.event-title-group {
+  flex: 1;
+  min-width: 0;
+  padding-right: 90px;
 }
 
 .event-card:hover {
@@ -308,10 +302,6 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.2;
   color: var(--text);
   margin: 0 0 2px;
-}
-
-.event-top-row {
-  margin-bottom: 8px;
 }
 
 .event-title {
@@ -654,8 +644,8 @@ textarea { resize: vertical; min-height: 90px; }
 
   .hero p { white-space: normal; }
 
-  .event-card { flex-direction: column; }
-  .event-status { flex-direction: row; align-items: center; }
+  .event-title-group { padding-right: 70px; }
+  .event-status { top: 20px; right: 20px; font-size: 14px; }
   .row-2 { flex-direction: column; gap: 0; }
 
   .event-details { display: none; }
@@ -663,4 +653,10 @@ textarea { resize: vertical; min-height: 90px; }
   .desc-toggle { display: inline-block; }
 
   .modal-box { padding: 32px 20px 24px; }
+
+  .form-wrap { padding: 16px 16px 60px; }
+  .form-card { padding: 20px; }
+  .category-picker { gap: 6px; }
+  .category-option span { padding: 6px 12px; font-size: 15px; }
+  input, select, textarea { font-size: 15px; padding: 10px 12px; }
 }
