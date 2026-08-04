@@ -152,7 +152,6 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700;
   color: var(--text);
   line-height: 1.5;
-  white-space: nowrap;
   margin: 0;
 }
 
@@ -407,6 +406,8 @@ label:first-child { margin-top: 0; }
 
 input, select, textarea {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   font-size: 16px;
@@ -428,7 +429,7 @@ textarea { resize: vertical; min-height: 90px; }
   display: flex;
   gap: 16px;
 }
-.row-2 > div { flex: 1; }
+.row-2 > div { flex: 1; min-width: 0; }
 
 .checkbox-row {
   display: flex;
@@ -442,7 +443,7 @@ textarea { resize: vertical; min-height: 90px; }
 .category-picker {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-top: 4px;
 }
 
@@ -465,7 +466,7 @@ textarea { resize: vertical; min-height: 90px; }
 .category-option span {
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 999px;
   border: 2px solid var(--text);
   background: var(--bg);
@@ -642,10 +643,13 @@ textarea { resize: vertical; min-height: 90px; }
   .logo-img { height: 80px; }
   .logo-mark { height: 80px; }
 
-  .hero p { white-space: normal; }
-
-  .event-title-group { padding-right: 70px; }
-  .event-status { top: 20px; right: 20px; font-size: 14px; }
+  .event-title-group { padding-right: 0; }
+  .event-status {
+    position: static;
+    align-items: flex-start;
+    margin-top: 10px;
+    font-size: 14px;
+  }
   .row-2 { flex-direction: column; gap: 0; }
 
   .event-details { display: none; }
@@ -656,7 +660,7 @@ textarea { resize: vertical; min-height: 90px; }
 
   .form-wrap { padding: 16px 16px 60px; }
   .form-card { padding: 20px; }
-  .category-picker { gap: 6px; }
-  .category-option span { padding: 6px 12px; font-size: 15px; }
+  .category-picker { gap: 4px; }
+  .category-option span { padding: 5px 11px; font-size: 15px; }
   input, select, textarea { font-size: 15px; padding: 10px 12px; }
 }
