@@ -2,22 +2,20 @@
 // CATEGORIES — the one place to edit your category list.
 // Both the homepage filters and the submission form pull from here.
 // ============================================================
-
 const CATEGORIES = [
   "Musik",
   "Theater & Bühne",
   "Kino",
-  "Kids",
+  "Kunst & Ausstellungen",
   "Natur & Ausflüge",
-  "Community",
   "Essen & Trinken",
   "Märkte & Feste",
+  "Community",
   "Workshops",
-  "Kunst & Ausstellungen",
+  "Kids",
   "Sport & Bewegung",
   "Other"
 ];
-
 // Color for each category's tag. Options: --accent, --purple, --orange, --teal, --pink, --grey
 const CATEGORY_COLORS = {
   "Musik": "var(--purple)",
@@ -33,7 +31,6 @@ const CATEGORY_COLORS = {
   "Sport & Bewegung": "var(--accent)",
   "Other": "var(--grey)"
 };
-
 // A simple symbol per category, shown next to its name
 const CATEGORY_ICONS = {
   "Musik": "🎵",
