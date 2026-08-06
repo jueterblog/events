@@ -613,6 +613,13 @@ input[type="time"] {
   font-style: italic;
 }
 
+.modal-divider-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+  margin: 8px auto 24px;
+}
+
 .modal-close {
   position: absolute;
   top: 16px;
@@ -658,7 +665,6 @@ input[type="time"] {
     position: static;
     align-items: flex-start;
     margin-top: 10px;
-    font-size: 14px;
   }
   .row-2 { flex-direction: column; gap: 0; }
 
