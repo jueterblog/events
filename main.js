@@ -2,6 +2,11 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let allEvents = [];
 let activeCategory = "all";
+let filterFree = false;
+let filterBarrierfrei = false;
+let activeMonth = "all";
+
+const MONTH_NAMES = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 
 function buildFilterChips() {
   const filtersEl = document.getElementById("filters");
@@ -28,6 +33,57 @@ function buildFilterChips() {
 function updateActiveChip() {
   document.querySelectorAll(".chip").forEach(chip => {
     chip.classList.toggle("active", chip.dataset.category === activeCategory);
+  });
+}
+
+function buildExtraFilters() {
+  const freeBtn = document.getElementById("filter-free");
+  const barrierfreiBtn = document.getElementById("filter-barrierfrei");
+
+  freeBtn.addEventListener("click", () => {
+    filterFree = !filterFree;
+    freeBtn.classList.toggle("active", filterFree);
+    renderEvents();
+  });
+
+  barrierfreiBtn.addEventListener("click", () => {
+    filterBarrierfrei = !filterBarrierfrei;
+    barrierfreiBtn.classList.toggle("active", filterBarrierfrei);
+    renderEvents();
+  });
+}
+
+function buildMonthFilters() {
+  const monthFiltersEl = document.getElementById("month-filters");
+  const monthsPresent = new Set();
+
+  allEvents.forEach(event => {
+    const d = new Date(event.event_date + "T00:00:00");
+    monthsPresent.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  });
+
+  const sortedMonths = Array.from(monthsPresent).sort();
+
+  monthFiltersEl.innerHTML = "";
+  sortedMonths.forEach(key => {
+    const monthIndex = parseInt(key.split("-")[1], 10) - 1;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "month-chip";
+    btn.textContent = MONTH_NAMES[monthIndex];
+    btn.dataset.month = key;
+    btn.addEventListener("click", () => {
+      activeMonth = activeMonth === key ? "all" : key;
+      updateActiveMonthChip();
+      renderEvents();
+    });
+    monthFiltersEl.appendChild(btn);
+  });
+}
+
+function updateActiveMonthChip() {
+  document.querySelectorAll(".month-chip").forEach(chip => {
+    chip.classList.toggle("active", chip.dataset.month === activeMonth);
   });
 }
 
@@ -63,6 +119,7 @@ async function fetchEvents() {
   }
 
   allEvents = data;
+  buildMonthFilters();
   renderEvents();
 }
 
@@ -71,9 +128,19 @@ function renderEvents() {
   const emptyEl = document.getElementById("empty-state");
   listEl.innerHTML = "";
 
-  const filtered = activeCategory === "all"
+  let filtered = activeCategory === "all"
     ? allEvents
     : allEvents.filter(e => (e.categories || []).includes(activeCategory));
+
+  if (filterFree) filtered = filtered.filter(e => e.is_free);
+  if (filterBarrierfrei) filtered = filtered.filter(e => e.is_barrierfrei);
+  if (activeMonth !== "all") {
+    filtered = filtered.filter(e => {
+      const d = new Date(e.event_date + "T00:00:00");
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      return key === activeMonth;
+    });
+  }
 
   if (filtered.length === 0) {
     emptyEl.style.display = "block";
@@ -106,10 +173,10 @@ function renderEvents() {
         <div class="event-title-group">
           <p class="event-cats">${escapeHtml(categoryLine)}</p>
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
+          <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · <a class="event-link" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         </div>
       </div>
       <div class="event-body">
-        <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · <a class="event-link" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         <div class="event-details">
           <p class="event-desc">${escapeHtml(event.description)}</p>
           ${event.link ? `<p style="margin:0 0 10px;"><a class="event-link" href="${escapeAttr(event.link)}" target="_blank" rel="noopener">Zur Veranstaltungsseite</a></p>` : ''}
@@ -134,6 +201,7 @@ function escapeAttr(str) {
 }
 
 buildFilterChips();
+buildExtraFilters();
 fetchEvents();
 
 document.getElementById("event-list").addEventListener("click", (e) => {
