@@ -37,20 +37,31 @@ function updateActiveChip() {
 }
 
 function buildExtraFilters() {
-  const freeBtn = document.getElementById("filter-free");
-  const barrierfreiBtn = document.getElementById("filter-barrierfrei");
+  const filtersEl = document.getElementById("filters");
 
+  const freeBtn = document.createElement("button");
+  freeBtn.type = "button";
+  freeBtn.className = "chip";
+  freeBtn.id = "filter-free";
+  freeBtn.textContent = "Kostenlos";
   freeBtn.addEventListener("click", () => {
     filterFree = !filterFree;
     freeBtn.classList.toggle("active", filterFree);
     renderEvents();
   });
+  filtersEl.appendChild(freeBtn);
 
+  const barrierfreiBtn = document.createElement("button");
+  barrierfreiBtn.type = "button";
+  barrierfreiBtn.className = "chip";
+  barrierfreiBtn.id = "filter-barrierfrei";
+  barrierfreiBtn.textContent = "Barrierfrei";
   barrierfreiBtn.addEventListener("click", () => {
     filterBarrierfrei = !filterBarrierfrei;
     barrierfreiBtn.classList.toggle("active", filterBarrierfrei);
     renderEvents();
   });
+  filtersEl.appendChild(barrierfreiBtn);
 }
 
 function buildMonthFilters() {
