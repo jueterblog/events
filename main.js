@@ -184,7 +184,7 @@ function renderEvents() {
         <div class="event-title-group">
           <p class="event-cats">${escapeHtml(categoryLine)}</p>
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
-          <div class="event-meta">${formatTimeRange(event.start_time, event.end_time)} · <a class="event-link" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
+          <div class="event-meta"><span class="event-time">${formatTimeRange(event.start_time, event.end_time)}</span><span class="event-meta-sep"> · </span><a class="event-link event-location" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         </div>
       </div>
       <div class="event-body">

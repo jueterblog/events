@@ -345,6 +345,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 16px;
   line-height: 1.2;
   color: var(--text);
+  margin-top: 12px;
   margin-bottom: 10px;
 }
 
@@ -701,6 +702,13 @@ input[type="time"] {
   .logo-mark { height: 80px; }
 
   .event-title-group { padding-right: 0; }
+  .event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .event-meta-sep { display: none; }
+  .event-location { display: block; }
   .event-status {
     position: static;
     align-items: flex-start;
