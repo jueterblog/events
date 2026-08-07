@@ -45,7 +45,7 @@ function formatTimeRange(start, end) {
 }
 
 async function fetchEvents() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
 
   const { data, error } = await client
     .from("events")
