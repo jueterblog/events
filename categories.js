@@ -7,6 +7,7 @@ const CATEGORIES = [
   "Theater & Bühne",
   "Kino",
   "Kunst & Ausstellungen",
+  "Reading & Writing",
   "Natur & Ausflüge",
   "Essen & Trinken",
   "Märkte & Feste",
@@ -28,6 +29,7 @@ const CATEGORY_COLORS = {
   "Märkte & Feste": "var(--orange)",
   "Workshops": "var(--teal)",
   "Kunst & Ausstellungen": "var(--pink)",
+  "Reading & Writing": "var(--pink)",
   "Sport & Bewegung": "var(--accent)",
   "Other": "var(--grey)"
 };
@@ -43,6 +45,7 @@ const CATEGORY_ICONS = {
   "Märkte & Feste": "🛍️",
   "Workshops": "🛠️",
   "Kunst & Ausstellungen": "🎨",
+  "Reading & Writing": "📚",
   "Sport & Bewegung": "⚽",
   "Other": "✨"
 };
