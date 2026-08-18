@@ -10,7 +10,6 @@ CATEGORIES.forEach((cat, index) => {
   wrapper.className = "category-option";
   wrapper.innerHTML = `<input type="checkbox" value="${cat}"><span>${cat}</span>`;
   picker.appendChild(wrapper);
-
   if (CATEGORY_LINE_BREAKS.includes(index)) {
     const breakEl = document.createElement("div");
     breakEl.className = "category-break";
@@ -24,6 +23,16 @@ picker.addEventListener("change", () => {
     box.disabled = !box.checked && checkedCount >= 3;
   });
 });
+
+// NEW: multi-day event toggle — shows/hides the end-date field
+const multidayCheckbox = document.getElementById("is_multiday");
+const endDateWrap = document.getElementById("end-date-wrap");
+const endDateField = document.getElementById("event_end_date");
+multidayCheckbox.addEventListener("change", () => {
+  endDateWrap.style.display = multidayCheckbox.checked ? "block" : "none";
+  if (!multidayCheckbox.checked) endDateField.value = "";
+});
+
 const descField = document.getElementById("description");
 const charCount = document.getElementById("char-count");
 descField.addEventListener("input", () => {
@@ -43,12 +52,23 @@ document.getElementById("event-form").addEventListener("submit", async (e) => {
     messageEl.textContent = "Bitte wähle mindestens eine Kategorie aus.";
     return;
   }
+
+  // NEW: validate end date isn't before start date, if provided
+  const startDateVal = document.getElementById("event_date").value;
+  const endDateVal = endDateField.value;
+  if (multidayCheckbox.checked && endDateVal && endDateVal < startDateVal) {
+    messageEl.classList.add("error");
+    messageEl.textContent = "Das Enddatum darf nicht vor dem Startdatum liegen.";
+    return;
+  }
+
   submitBtn.disabled = true;
   submitBtn.textContent = "Wird gesendet...";
   const newEvent = {
     event_name: document.getElementById("event_name").value.trim(),
     categories: selectedCategories,
-    event_date: document.getElementById("event_date").value,
+    event_date: startDateVal,
+    event_end_date: multidayCheckbox.checked ? (endDateVal || null) : null, // NEW
     start_time: document.getElementById("start_time").value,
     end_time: document.getElementById("end_time").value || null,
     location: document.getElementById("location").value.trim(),
@@ -75,4 +95,5 @@ document.getElementById("event-form").addEventListener("submit", async (e) => {
   messageEl.textContent = "Danke! Dein Event wurde eingereicht und wird geprüft. Es erscheint auf der Website, sobald es freigegeben wurde.";
   document.getElementById("event-form").reset();
   charCount.textContent = "0";
+  endDateWrap.style.display = "none"; // NEW: reset the toggle on successful submit
 });
