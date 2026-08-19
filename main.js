@@ -39,9 +39,15 @@ function updateActiveChip() {
 function buildExtraFilters() {
   const filtersEl = document.getElementById("filters");
 
+  // Sprout divider — visually separates category chips from attribute filters
+  const divider = document.createElement("span");
+  divider.className = "filter-divider";
+  divider.innerHTML = `<img src="sprout.png" alt="">`;
+  filtersEl.appendChild(divider);
+
   const freeBtn = document.createElement("button");
   freeBtn.type = "button";
-  freeBtn.className = "chip";
+  freeBtn.className = "chip-attribute";
   freeBtn.id = "filter-free";
   freeBtn.textContent = "Kostenlos";
   freeBtn.addEventListener("click", () => {
@@ -53,7 +59,7 @@ function buildExtraFilters() {
 
   const barrierfreiBtn = document.createElement("button");
   barrierfreiBtn.type = "button";
-  barrierfreiBtn.className = "chip";
+  barrierfreiBtn.className = "chip-attribute";
   barrierfreiBtn.id = "filter-barrierfrei";
   barrierfreiBtn.textContent = "Barrierfrei";
   barrierfreiBtn.addEventListener("click", () => {
