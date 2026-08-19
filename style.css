@@ -174,6 +174,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 
 .month-filters {
@@ -679,6 +680,45 @@ input[type="time"] {
 .modal-close:hover {
   background: var(--text);
   color: var(--bg);
+}
+
+/* ---------- Attribute filters (Kostenlos, Barrierfrei) ---------- */
+/* Same colors/behavior as .chip, but squared corners instead of a pill,
+   to visually distinguish "attributes" from "categories" in the filter row. */
+
+.chip-attribute {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--text);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-attribute:hover { background: var(--text); color: var(--bg); }
+.chip-attribute.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+/* Sprout divider between category chips and attribute chips */
+.filter-divider {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  width: auto;
+  margin: 0 4px;
+  opacity: 0.85;
+}
+.filter-divider img {
+  height: 100%;
+  width: auto;
+  display: block;
 }
 
 @media (max-width: 600px) {
