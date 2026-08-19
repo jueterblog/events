@@ -1,11 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About Us — Jüterblog</title>
 <link rel="icon" type="image/png" href="logo-mark.png">
 <link rel="stylesheet" href="style.css">
+<style>
+  .lang-toggle-wrap {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 24px 32px 0;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .lang-toggle {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    background: transparent;
+    border: 2px solid var(--text);
+    border-radius: 999px;
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .lang-toggle:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
+  .lang-block[hidden] { display: none; }
+  @media (max-width: 600px) {
+    .lang-toggle-wrap { padding: 16px 16px 0; }
+  }
+</style>
 </head>
 <body>
 
@@ -21,19 +50,27 @@
   </div>
 </header>
 
+<div class="lang-toggle-wrap">
+  <button type="button" class="lang-toggle" id="lang-toggle">English</button>
+</div>
+
 <div class="form-wrap">
   <div class="form-card">
-    <p><strong>Jüterblog</strong> ist kein vollständiger Veranstaltungskalender, sondern eine persönliche redaktionelle Auswahl. Wir stellen Veranstaltungen vor, die Gemeinschaft fördern, Kultur erlebbar machen, Familien und Kinder ansprechen oder das demokratische und vielfältige Miteinander in und um Jüterbog stärken.</p>
-    <p>Keinen Platz haben Veranstaltungen oder Inhalte, die Menschen aufgrund ihrer Herkunft, Religion, ihres Geschlechts, ihrer sexuellen Orientierung, ihrer Geschlechtsidentität, einer Behinderung oder anderer Merkmale diskriminieren oder ausgrenzen.</p>
-    <p>Uns ist außerdem wichtig, dass Veranstaltungen zugänglich bleiben und zum Geist des Kalenders passen — rein kommerzielle Veranstaltungen, Events mit hohem Eintrittspreis oder Inhalte ohne Bezug zu Gemeinschaft und Kultur nehmen wir in der Regel nicht auf.</p>
-    <p>Nicht jede eingereichte Veranstaltung wird veröffentlicht. Die Auswahl erfolgt nach unserer redaktionellen Einschätzung und den Werten, für die <strong>Jüterblog</strong> steht.</p>
 
-    <img src="logo-mark.png" alt="" class="modal-divider-logo">
+    <div class="lang-block" id="lang-de">
+      <p><strong>Jüterblog</strong> ist kein vollständiger Veranstaltungskalender, sondern eine persönliche redaktionelle Auswahl. Wir stellen Veranstaltungen vor, die Gemeinschaft fördern, Kultur erlebbar machen, Familien und Kinder ansprechen oder das demokratische und vielfältige Miteinander in und um Jüterbog stärken.</p>
+      <p>Keinen Platz haben Veranstaltungen oder Inhalte, die Menschen aufgrund ihrer Herkunft, Religion, ihres Geschlechts, ihrer sexuellen Orientierung, ihrer Geschlechtsidentität, einer Behinderung oder anderer Merkmale diskriminieren oder ausgrenzen.</p>
+      <p>Uns ist außerdem wichtig, dass Veranstaltungen zugänglich bleiben und zum Geist des Kalenders passen — rein kommerzielle Veranstaltungen, Events mit hohem Eintrittspreis oder Inhalte ohne Bezug zu Gemeinschaft und Kultur nehmen wir in der Regel nicht auf.</p>
+      <p>Nicht jede eingereichte Veranstaltung wird veröffentlicht. Die Auswahl erfolgt nach unserer redaktionellen Einschätzung und den Werten, für die <strong>Jüterblog</strong> steht.</p>
+    </div>
 
-    <p class="modal-en"><strong>Jüterblog</strong> is not a comprehensive event calendar, but a personally curated editorial selection. We feature events that strengthen community, celebrate culture, welcome families and children, and contribute to an open, democratic, and diverse community in and around Jüterbog.</p>
-    <p class="modal-en">We do not publish events or content that discriminate against or exclude people on the basis of their ethnicity, religion, gender, sexual orientation, gender identity, disability, or any other protected characteristic.</p>
-    <p class="modal-en">We also want events to stay accessible and to fit the spirit of the calendar — purely commercial events, high-ticket events, or those unrelated to community and culture generally won't be featured.</p>
-    <p class="modal-en">Not every submitted event will be published. Our selections reflect <strong>Jüterblog</strong>'s editorial values and the kind of community we aim to support.</p>
+    <div class="lang-block" id="lang-en" hidden>
+      <p><strong>Jüterblog</strong> is not a comprehensive event calendar, but a personally curated editorial selection. We feature events that strengthen community, celebrate culture, welcome families and children, and contribute to an open, democratic, and diverse community in and around Jüterbog.</p>
+      <p>We do not publish events or content that discriminate against or exclude people on the basis of their ethnicity, religion, gender, sexual orientation, gender identity, disability, or any other protected characteristic.</p>
+      <p>We also want events to stay accessible and to fit the spirit of the calendar — purely commercial events, high-ticket events, or those unrelated to community and culture generally won't be featured.</p>
+      <p>Not every submitted event will be published. Our selections reflect <strong>Jüterblog</strong>'s editorial values and the kind of community we aim to support.</p>
+    </div>
+
   </div>
 </div>
 
@@ -45,6 +82,20 @@
   </div>
   <p class="copyright">© 2026 Jüterblog</p>
 </footer>
+
+<script>
+  const langToggle = document.getElementById('lang-toggle');
+  const langDe = document.getElementById('lang-de');
+  const langEn = document.getElementById('lang-en');
+  let showingEnglish = false;
+
+  langToggle.addEventListener('click', () => {
+    showingEnglish = !showingEnglish;
+    langDe.hidden = showingEnglish;
+    langEn.hidden = !showingEnglish;
+    langToggle.textContent = showingEnglish ? 'Deutsch' : 'English';
+  });
+</script>
 
 </body>
 </html>
