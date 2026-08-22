@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — Jüterblog</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 860px;
+    margin: 40px auto;
+    padding: 0 16px;
+    color: #222;
+  }
+  h1 { font-size: 22px; }
+  #login-screen {
+    max-width: 320px;
+    margin: 100px auto;
+    text-align: center;
+  }
+  #login-screen input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+    font-size: 15px;
+  }
+  #login-screen button, .btn {
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fafafa;
+  }
+  #login-screen button { width: 100%; }
+  .btn:hover { background: #f0f0f0; }
+  .btn-primary { background: #222; color: #fff; border-color: #222; }
+  .btn-primary:hover { background: #000; }
+  .btn-danger { color: #b00020; border-color: #eeb; }
+  #error { color: #b00020; font-size: 14px; }
+  .tabs { margin-bottom: 16px; }
+  .tabs button {
+    margin-right: 6px;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .tabs button.active { background: #222; color: #fff; border-color: #222; }
+  .card {
+    border: 1px solid #e2e2e2;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .card-top strong { font-size: 16px; }
+  .meta { font-size: 12px; color: #888; white-space: nowrap; }
+  .details { color: #555; font-size: 14px; margin: 6px 0; }
+  .status-pill {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #eee;
+    margin-right: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .status-approved { background: #d6f5c6; }
+  .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  form.edit label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+  form.edit input[type="text"],
+  form.edit input[type="date"],
+  form.edit input[type="time"],
+  form.edit textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .checkline { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 14px; }
+  .form-actions { margin-top: 12px; }
+  #loading, #empty { color: #888; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h2>Admin-Login</h2>
+  <input id="pw-input" type="password" placeholder="Passwort" />
+  <button id="login-btn">Einloggen</button>
+  <p id="error"></p>
+</div>
+
+<div id="app" style="display:none;">
+  <h1>Event-Einreichungen</h1>
+  <div class="tabs">
+    <button data-filter="pending" class="active">Ausstehend</button>
+    <button data-filter="approved">Freigegeben</button>
+    <button data-filter="all">Alle</button>
+  </div>
+  <p id="loading" style="display:none;">Lädt…</p>
+  <p id="empty" style="display:none;">Keine Events in dieser Ansicht.</p>
+  <div id="list"></div>
+</div>
+
+<script>
+const API = '/api/admin/events';
+let password = sessionStorage.getItem('admin_pw') || '';
+let events = [];
+let filter = 'pending';
+let editingId = null;
+
+const loginScreen = document.getElementById('login-screen');
+const app = document.getElementById('app');
+const pwInput = document.getElementById('pw-input');
+const errorEl = document.getElementById('error');
+const listEl = document.getElementById('list');
+const loadingEl = document.getElementById('loading');
+const emptyEl = document.getElementById('empty');
+
+document.getElementById('login-btn').addEventListener('click', () => {
+  password = pwInput.value;
+  sessionStorage.setItem('admin_pw', password);
+  init();
+});
+pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
+
+document.querySelectorAll('.tabs button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    filter = btn.dataset.filter;
+    document.querySelectorAll('.tabs button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  });
+});
+
+async function apiCall(method, body) {
+  const res = await fetch(API, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-admin-password': password,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) {
+    sessionStorage.removeItem('admin_pw');
+    loginScreen.style.display = 'block';
+    app.style.display = 'none';
+    errorEl.textContent = 'Passwort abgelehnt — bitte erneut versuchen.';
+    throw new Error('unauthorized');
+  }
+  return res.json();
+}
+
+async function init() {
+  loginScreen.style.display = 'none';
+  app.style.display = 'block';
+  loadingEl.style.display = 'block';
+  try {
+    const data = await apiCall('GET');
+    events = data.events || [];
+  } catch (e) {
+    return;
+  }
+  loadingEl.style.display = 'none';
+  render();
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d + 'T00:00:00').toLocaleDateString('de-DE');
+}
+
+function render() {
+  const visible = filter === 'all' ? events : events.filter((e) => e.status === filter);
+  listEl.innerHTML = '';
+  emptyEl.style.display = visible.length === 0 ? 'block' : 'none';
+
+  visible.forEach((ev) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    if (editingId === ev.id) {
+      card.innerHTML = editFormHtml(ev);
+      listEl.appendChild(card);
+      wireEditForm(card, ev);
+      return;
+    }
+
+    const dateRange = ev.event_end_date && ev.event_end_date !== ev.event_date
+      ? `${fmtDate(ev.event_date)} – ${fmtDate(ev.event_end_date)}`
+      : fmtDate(ev.event_date);
+
+    card.innerHTML = `
+      <div class="card-top">
+        <strong>${escapeHtml(ev.event_name || '(ohne Titel)')}</strong>
+        <span class="meta">eingereicht ${new Date(ev.created_at).toLocaleString('de-DE')}</span>
+      </div>
+      <div class="details">
+        ${dateRange}${ev.start_time ? ' · ' + ev.start_time.slice(0,5) : ''}
+        ${ev.location ? ' · ' + escapeHtml(ev.location) : ''}
+        ${ev.categories && ev.categories.length ? ' · ' + escapeHtml(ev.categories.join(', ')) : ''}
+      </div>
+      <div class="details">${escapeHtml(ev.description || '')}</div>
+      <div class="actions">
+        <span class="status-pill ${ev.status === 'approved' ? 'status-approved' : ''}">${escapeHtml(ev.status || '')}</span>
+        <button class="btn" data-action="edit">Bearbeiten</button>
+        ${ev.status !== 'approved'
+          ? '<button class="btn btn-primary" data-action="approve">Freigeben</button>'
+          : '<button class="btn" data-action="unapprove">Zurückziehen</button>'}
+        <button class="btn btn-danger" data-action="delete">Löschen</button>
+      </div>
+    `;
+
+    card.querySelector('[data-action="edit"]').addEventListener('click', () => {
+      editingId = ev.id;
+      render();
+    });
+    card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+      if (!confirm('Dieses Event endgültig löschen?')) return;
+      await apiCall('DELETE', { id: ev.id });
+      await init();
+    });
+    const approveBtn = card.querySelector('[data-action="approve"]');
+    if (approveBtn) approveBtn.addEventListener('click', async () => {
+      await apiCall('PATCH', { id: ev.id, status: 'approved' });
+      await init();
+    });
+    const unapproveBtn = card.querySelector('[data-action="unapprove"]');
+    if (unapproveBtn) unapproveBtn.addEventListener('click', async () => {
+      await apiCall('PATCH', { id: ev.id, status: 'pending' });
+      await init();
+    });
+
+    listEl.appendChild(card);
+  });
+}
+
+function editFormHtml(ev) {
+  return `
+    <form class="edit">
+      <label>Name der Veranstaltung</label>
+      <input type="text" name="event_name" value="${attr(ev.event_name)}" />
+
+      <div class="row2">
+        <div>
+          <label>Kategorien (Komma-getrennt)</label>
+          <input type="text" name="categories" value="${attr((ev.categories || []).join(', '))}" />
+        </div>
+        <div>
+          <label>Ort</label>
+          <input type="text" name="location" value="${attr(ev.location)}" />
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>Datum</label>
+          <input type="date" name="event_date" value="${attr(ev.event_date)}" />
+        </div>
+        <div>
+          <label>Beginn</label>
+          <input type="time" name="start_time" value="${attr((ev.start_time||'').slice(0,5))}" />
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>Enddatum (falls mehrtägig)</label>
+          <input type="date" name="event_end_date" value="${attr(ev.event_end_date)}" />
+        </div>
+        <div>
+          <label>Ende</label>
+          <input type="time" name="end_time" value="${attr((ev.end_time||'').slice(0,5))}" />
+        </div>
+      </div>
+
+      <label>Adresse</label>
+      <input type="text" name="address" value="${attr(ev.address)}" />
+
+      <label>Beschreibung</label>
+      <textarea name="description" rows="4">${escapeHtml(ev.description || '')}</textarea>
+
+      <label>Link</label>
+      <input type="text" name="link" value="${attr(ev.link)}" />
+
+      <div class="row2">
+        <div>
+          <label>Name der einreichenden Person</label>
+          <input type="text" name="submitter_name" value="${attr(ev.submitter_name)}" />
+        </div>
+        <div>
+          <label>E-Mail</label>
+          <input type="text" name="submitter_email" value="${attr(ev.submitter_email)}" />
+        </div>
+      </div>
+
+      <div class="checkline">
+        <input type="checkbox" name="is_free" ${ev.is_free ? 'checked' : ''} id="is_free_${ev.id}" />
+        <label for="is_free_${ev.id}" style="margin:0;">Kostenlos</label>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" name="is_barrierfrei" ${ev.is_barrierfrei ? 'checked' : ''} id="is_barrierfrei_${ev.id}" />
+        <label for="is_barrierfrei_${ev.id}" style="margin:0;">Barrierefrei</label>
+      </div>
+
+      <label>Barrierefreiheit — Hinweis</label>
+      <input type="text" name="barrierfrei_info" value="${attr(ev.barrierfrei_info)}" />
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Speichern</button>
+        <button type="button" class="btn" data-action="cancel">Abbrechen</button>
+      </div>
+    </form>
+  `;
+}
+
+function wireEditForm(card, ev) {
+  const form = card.querySelector('form.edit');
+  card.querySelector('[data-action="cancel"]').addEventListener('click', () => {
+    editingId = null;
+    render();
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = {
+      id: ev.id,
+      event_name: fd.get('event_name'),
+      categories: fd.get('categories').split(',').map(s => s.trim()).filter(Boolean),
+      location: fd.get('location'),
+      event_date: fd.get('event_date') || null,
+      start_time: fd.get('start_time') || null,
+      event_end_date: fd.get('event_end_date') || null,
+      end_time: fd.get('end_time') || null,
+      address: fd.get('address'),
+      description: fd.get('description'),
+      link: fd.get('link'),
+      submitter_name: fd.get('submitter_name'),
+      submitter_email: fd.get('submitter_email'),
+      is_free: fd.get('is_free') === 'on',
+      is_barrierfrei: fd.get('is_barrierfrei') === 'on',
+      barrierfrei_info: fd.get('barrierfrei_info'),
+    };
+    await apiCall('PATCH', body);
+    editingId = null;
+    await init();
+  });
+}
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+function attr(str) { return escapeHtml(str); }
+
+// Auto-login if a password was already saved this session
+if (password) {
+  init();
+}
+</script>
+</body>
+</html>
