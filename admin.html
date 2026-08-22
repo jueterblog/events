@@ -176,8 +176,16 @@ async function init() {
   loginScreen.style.display = 'none';
   app.style.display = 'block';
   loadingEl.style.display = 'block';
+  emptyEl.textContent = 'Keine Events in dieser Ansicht.';
   try {
     const data = await apiCall('GET');
+    if (data.error) {
+      loadingEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+      emptyEl.textContent = 'Fehler: ' + data.error;
+      events = [];
+      return;
+    }
     events = data.events || [];
   } catch (e) {
     return;
