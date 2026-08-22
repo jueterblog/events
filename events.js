@@ -7,16 +7,19 @@
 // Uses the Supabase SERVICE ROLE key server-side (bypasses RLS) and checks a
 // shared admin password on every request.
 //
-// Env vars (these were auto-created by the Vercel <-> Supabase Marketplace integration):
-//   NEXT_PUBLIC_SUPABASE_URL    (your project URL — public, safe to reuse server-side)
-//   SUPABASE_SERVICE_ROLE_KEY   (privileged key — keep secret, never sent to the browser)
-//   ADMIN_PASSWORD              (add this one manually — pick any password)
+// Env vars:
+//   NEXT_PUBLIC_SUPABASE_URL      (auto-created by the Vercel <-> Supabase integration)
+//   SUPABASE_ADMIN_KEY            (add this one manually — the LEGACY service_role key,
+//                                   copied from Supabase: Settings -> API Keys ->
+//                                   "Legacy anon, service_role API keys" tab -> service_role.
+//                                   Starts with "eyJ...". Keep secret, never send to browser.)
+//   ADMIN_PASSWORD                (add this one manually — pick any password)
 
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  process.env.SUPABASE_ADMIN_KEY,
   {
     auth: {
       persistSession: false,
