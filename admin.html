@@ -630,25 +630,21 @@ function nlEventCardHtml(ev) {
   if (ev.is_free) tags.push('Kostenlos');
   if (ev.is_barrierfrei) tags.push('Barrierefrei');
 
-  const link = `https://jueter.blog/#event-${ev.id}`;
-  const titleHtml = `<a href="${attr(link)}" style="color:#0055a4; text-decoration:none;">${escapeHtml(ev.event_name || '')}</a>`;
+  const cardLink = `https://jueter.blog/#event-${ev.id}`;
+  const titleHtml = `<a href="${attr(cardLink)}" style="color:#0055a4; text-decoration:none;">${escapeHtml(ev.event_name || '')}</a>`;
 
-  const FS = 'font-family:Verdana, Geneva, sans-serif; font-size:16px;';
+  const FS = 'font-family:Verdana, Geneva, sans-serif; font-size:16px; color:#0055a4;';
 
   const parts = [];
-  parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold; color:#0055a4;">${escapeHtml(dateRange)}</p>`);
-  parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold; color:#0055a4;">${titleHtml}</p>`);
+  parts.push(`<p style="margin:0 0 2px 0; ${FS}">${escapeHtml(dateRange)}</p>`);
+  parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold;">${titleHtml}</p>`);
   if (ev.categories && ev.categories.length) {
-    parts.push(`<p style="margin:0 0 2px 0; ${FS} font-style:italic; color:#0055a4;">${escapeHtml(ev.categories.join(', '))}</p>`);
+    parts.push(`<p style="margin:0 0 2px 0; ${FS} font-style:italic;">${escapeHtml(ev.categories.join(', '))}</p>`);
   }
   if (tags.length) {
-    parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold; color:#0055a4;">${escapeHtml(tags.join(' – '))}</p>`);
+    parts.push(`<p style="margin:0 0 2px 0; ${FS}">${escapeHtml(tags.join(' – '))}</p>`);
   }
-  if (link) {
-    parts.push(`<p style="margin:0 0 18px 0; ${FS}"><a href="${attr(link)}" style="color:#0055a4; font-weight:bold; text-decoration:none;">Mehr Info</a></p>`);
-  } else {
-    parts.push(`<p style="margin:0 0 18px 0;">&nbsp;</p>`);
-  }
+  parts.push(`<p style="margin:0 0 18px 0; ${FS}"><a href="${attr(cardLink)}" style="color:#0055a4; text-decoration:underline;">Mehr Info</a></p>`);
   return parts.join('');
 }
 
