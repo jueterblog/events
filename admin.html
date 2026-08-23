@@ -100,6 +100,51 @@
   .checkline { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 14px; }
   .form-actions { margin-top: 12px; }
   #loading, #empty { color: #888; font-size: 14px; }
+
+  .main-nav { margin-bottom: 20px; border-bottom: 1px solid #e2e2e2; }
+  .main-nav button {
+    padding: 8px 4px;
+    margin-right: 20px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #888;
+  }
+  .main-nav button.active { color: #222; border-bottom-color: #43b262; font-weight: 600; }
+
+  .nl-event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .nl-event-row input[type="checkbox"] { margin-top: 3px; }
+  .nl-event-row .nl-event-info strong { font-size: 14px; }
+  .nl-event-row .nl-event-meta { font-size: 12px; color: #888; }
+  .nl-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+  .nl-toolbar .btn-link { background: none; border: none; color: #0055a4; cursor: pointer; font-size: 13px; padding: 0; text-decoration: underline; }
+  #newsletter-output { margin-top: 20px; }
+  #newsletter-html {
+    width: 100%;
+    box-sizing: border-box;
+    height: 160px;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  #newsletter-preview {
+    width: 100%;
+    height: 700px;
+    border: 1px solid #e2e2e2;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  #copy-confirm { color: #43b262; font-size: 13px; margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -112,15 +157,51 @@
 </div>
 
 <div id="app" style="display:none;">
-  <h1>Event-Einreichungen</h1>
-  <div class="tabs">
-    <button data-filter="pending" class="active">Ausstehend</button>
-    <button data-filter="approved">Freigegeben</button>
-    <button data-filter="all">Alle</button>
+  <div class="main-nav">
+    <button data-view="events" class="active">Events</button>
+    <button data-view="newsletter">Newsletter</button>
   </div>
-  <p id="loading" style="display:none;">Lädt…</p>
-  <p id="empty" style="display:none;">Keine Events in dieser Ansicht.</p>
-  <div id="list"></div>
+
+  <div id="events-view">
+    <h1>Event-Einreichungen</h1>
+    <div class="tabs">
+      <button data-filter="pending" class="active">Ausstehend</button>
+      <button data-filter="approved">Freigegeben</button>
+      <button data-filter="all">Alle</button>
+    </div>
+    <p id="loading" style="display:none;">Lädt…</p>
+    <p id="empty" style="display:none;">Keine Events in dieser Ansicht.</p>
+    <div id="list"></div>
+  </div>
+
+  <div id="newsletter-view" style="display:none;">
+    <h1>Newsletter erstellen</h1>
+    <p class="details">Wähle die freigegebenen Events aus, die im Newsletter erscheinen sollen.</p>
+    <div class="nl-toolbar">
+      <div>
+        <button class="btn-link" id="nl-select-all">Alle auswählen</button> ·
+        <button class="btn-link" id="nl-select-none">Auswahl aufheben</button>
+      </div>
+      <span class="meta" id="nl-count"></span>
+    </div>
+    <div id="nl-event-list"></div>
+    <p id="nl-empty" class="details" style="display:none;">Keine freigegebenen Events vorhanden.</p>
+    <div class="form-actions">
+      <button class="btn btn-primary" id="nl-generate">Newsletter generieren</button>
+    </div>
+    <div id="newsletter-output" style="display:none;">
+      <div class="nl-toolbar">
+        <strong style="font-size:14px;">Event-Liste (HTML-Block für Brevo)</strong>
+        <span>
+          <button class="btn" id="nl-copy">HTML kopieren</button>
+          <span id="copy-confirm" style="display:none;">Kopiert!</span>
+        </span>
+      </div>
+      <textarea id="newsletter-html" readonly></textarea>
+      <p class="details" style="margin-top:14px;">Vorschau:</p>
+      <iframe id="newsletter-preview"></iframe>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -137,6 +218,19 @@ const errorEl = document.getElementById('error');
 const listEl = document.getElementById('list');
 const loadingEl = document.getElementById('loading');
 const emptyEl = document.getElementById('empty');
+const eventsView = document.getElementById('events-view');
+const newsletterView = document.getElementById('newsletter-view');
+
+document.querySelectorAll('.main-nav button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.main-nav button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    const view = btn.dataset.view;
+    eventsView.style.display = view === 'events' ? 'block' : 'none';
+    newsletterView.style.display = view === 'newsletter' ? 'block' : 'none';
+    if (view === 'newsletter') renderNewsletterSelect();
+  });
+});
 
 document.getElementById('login-btn').addEventListener('click', () => {
   password = pwInput.value;
@@ -429,6 +523,129 @@ function wireEditForm(card, ev) {
     editingId = null;
     await init();
   });
+}
+
+// ---------- Newsletter ----------
+
+const DE_MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+
+function getUpcomingMonthBounds() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth(); // 0-indexed current month
+  const nextMonth = m === 11 ? 0 : m + 1;
+  const nextYear = m === 11 ? y + 1 : y;
+  const start = new Date(nextYear, nextMonth, 1);
+  const end = new Date(nextYear, nextMonth + 1, 0);
+  const toIso = (d) => d.toISOString().slice(0, 10);
+  return { start: toIso(start), end: toIso(end), label: `${DE_MONTHS[nextMonth]} ${nextYear}` };
+}
+
+function renderNewsletterSelect() {
+  const listEl = document.getElementById('nl-event-list');
+  const emptyEl = document.getElementById('nl-empty');
+  const approved = events
+    .filter((e) => e.status === 'approved')
+    .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));
+
+  listEl.innerHTML = '';
+  emptyEl.style.display = approved.length === 0 ? 'block' : 'none';
+
+  const bounds = getUpcomingMonthBounds();
+
+  approved.forEach((ev) => {
+    const inUpcomingMonth = ev.event_date >= bounds.start && ev.event_date <= bounds.end;
+    const row = document.createElement('div');
+    row.className = 'nl-event-row';
+    row.innerHTML = `
+      <input type="checkbox" data-id="${attr(ev.id)}" ${inUpcomingMonth ? 'checked' : ''} />
+      <div class="nl-event-info">
+        <strong>${escapeHtml(ev.event_name || '(ohne Titel)')}</strong><br/>
+        <span class="nl-event-meta">${fmtDate(ev.event_date)}${ev.location ? ' · ' + escapeHtml(ev.location) : ''}</span>
+      </div>
+    `;
+    row.querySelector('input').addEventListener('change', updateNlCount);
+    listEl.appendChild(row);
+  });
+
+  updateNlCount();
+  document.getElementById('newsletter-output').style.display = 'none';
+}
+
+function updateNlCount() {
+  const total = document.querySelectorAll('#nl-event-list input[type="checkbox"]').length;
+  const checked = document.querySelectorAll('#nl-event-list input[type="checkbox"]:checked').length;
+  document.getElementById('nl-count').textContent = `${checked} von ${total} ausgewählt`;
+}
+
+document.getElementById('nl-select-all').addEventListener('click', () => {
+  document.querySelectorAll('#nl-event-list input[type="checkbox"]').forEach((cb) => cb.checked = true);
+  updateNlCount();
+});
+document.getElementById('nl-select-none').addEventListener('click', () => {
+  document.querySelectorAll('#nl-event-list input[type="checkbox"]').forEach((cb) => cb.checked = false);
+  updateNlCount();
+});
+
+document.getElementById('nl-generate').addEventListener('click', () => {
+  const checkedIds = Array.from(document.querySelectorAll('#nl-event-list input[type="checkbox"]:checked'))
+    .map((cb) => cb.dataset.id);
+  const selected = events
+    .filter((e) => checkedIds.includes(e.id))
+    .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));
+
+  if (selected.length === 0) {
+    alert('Bitte mindestens ein Event auswählen.');
+    return;
+  }
+
+  const html = generateNewsletterHtml(selected);
+
+  document.getElementById('newsletter-html').value = html;
+  document.getElementById('newsletter-preview').srcdoc =
+    `<body style="margin:0; padding:20px; background:#fdfdfd;">${html}</body>`;
+  document.getElementById('newsletter-output').style.display = 'block';
+  document.getElementById('newsletter-output').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('nl-copy').addEventListener('click', async () => {
+  const textarea = document.getElementById('newsletter-html');
+  const confirmEl = document.getElementById('copy-confirm');
+  try {
+    await navigator.clipboard.writeText(textarea.value);
+  } catch (e) {
+    textarea.select();
+    document.execCommand('copy');
+  }
+  confirmEl.style.display = 'inline';
+  setTimeout(() => { confirmEl.style.display = 'none'; }, 2000);
+});
+
+function nlEventCardHtml(ev) {
+  const dateRange = ev.event_end_date && ev.event_end_date !== ev.event_date
+    ? `${fmtDate(ev.event_date)} – ${fmtDate(ev.event_end_date)}`
+    : fmtDate(ev.event_date) + (ev.start_time ? ', ' + ev.start_time.slice(0, 5) + ' Uhr' : '');
+
+  const tags = [];
+  if (ev.is_free) tags.push('Kostenlos');
+  if (ev.is_barrierfrei) tags.push('Barrierefrei');
+
+  const link = ev.link || '';
+  const titleHtml = link
+    ? `<a href="${attr(link)}" style="color:#0055a4; text-decoration:none;">${escapeHtml(ev.event_name || '')}</a>`
+    : escapeHtml(ev.event_name || '');
+
+  return `
+<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px; font-weight:bold; color:#0055a4;">${escapeHtml(dateRange)}</p>
+<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:16px; font-weight:bold; color:#0055a4;">${titleHtml}</p>
+${ev.categories && ev.categories.length ? `<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px; font-style:italic; color:#0055a4;">${escapeHtml(ev.categories.join(', '))}</p>` : ''}
+${tags.length ? `<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px; color:#0055a4; font-weight:bold;">${escapeHtml(tags.join(' – '))}</p>` : ''}
+${link ? `<p style="margin:0 0 18px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px;"><a href="${attr(link)}" style="color:#0055a4; font-weight:bold; text-decoration:none;">Mehr Info</a></p>` : `<p style="margin:0 0 18px 0;">&nbsp;</p>`}
+`;
+}
+
+function generateNewsletterHtml(selected) {
+  return selected.map(nlEventCardHtml).join('\n').trim();
 }
 
 function escapeHtml(str) {
