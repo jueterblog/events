@@ -76,6 +76,7 @@
     letter-spacing: 0.03em;
   }
   .status-approved { background: #d6f5c6; }
+  .status-new { background: #dcf4a2; }
   .actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
   form.edit label {
     display: block;
@@ -177,6 +178,7 @@ async function init() {
   app.style.display = 'block';
   loadingEl.style.display = 'block';
   emptyEl.textContent = 'Keine Events in dieser Ansicht.';
+  editingId = null;
   try {
     const data = await apiCall('GET');
     if (data.error) {
@@ -197,6 +199,10 @@ async function init() {
 function fmtDate(d) {
   if (!d) return '';
   return new Date(d + 'T00:00:00').toLocaleDateString('de-DE');
+}
+
+function isDraftId(id) {
+  return typeof id === 'string' && id.startsWith('draft-');
 }
 
 function render() {
@@ -233,6 +239,7 @@ function render() {
       <div class="actions">
         <span class="status-pill ${ev.status === 'approved' ? 'status-approved' : ''}">${escapeHtml(ev.status || '')}</span>
         <button class="btn" data-action="edit">Bearbeiten</button>
+        <button class="btn" data-action="duplicate">Duplizieren</button>
         ${ev.status !== 'approved'
           ? '<button class="btn btn-primary" data-action="approve">Freigeben</button>'
           : '<button class="btn" data-action="unapprove">Zurückziehen</button>'}
@@ -242,6 +249,24 @@ function render() {
 
     card.querySelector('[data-action="edit"]').addEventListener('click', () => {
       editingId = ev.id;
+      render();
+    });
+    card.querySelector('[data-action="duplicate"]').addEventListener('click', () => {
+      const draft = {
+        ...ev,
+        id: 'draft-' + Date.now(),
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+      const idx = events.findIndex((e) => e.id === ev.id);
+      events.splice(idx + 1, 0, draft);
+      editingId = draft.id;
+      if (filter !== 'all' && filter !== 'pending') {
+        filter = 'pending';
+        document.querySelectorAll('.tabs button').forEach((b) => {
+          b.classList.toggle('active', b.dataset.filter === 'pending');
+        });
+      }
       render();
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
@@ -265,8 +290,10 @@ function render() {
 }
 
 function editFormHtml(ev) {
+  const isDraft = isDraftId(ev.id);
   return `
     <form class="edit">
+      ${isDraft ? '<span class="status-pill status-new">Neue Kopie — noch nicht gespeichert</span>' : ''}
       <label>Name der Veranstaltung</label>
       <input type="text" name="event_name" value="${attr(ev.event_name)}" />
 
@@ -336,7 +363,7 @@ function editFormHtml(ev) {
       <input type="text" name="barrierfrei_info" value="${attr(ev.barrierfrei_info)}" />
 
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Speichern</button>
+        <button type="submit" class="btn btn-primary">${isDraft ? 'Als neues Event speichern' : 'Speichern'}</button>
         <button type="button" class="btn" data-action="cancel">Abbrechen</button>
       </div>
     </form>
@@ -345,15 +372,20 @@ function editFormHtml(ev) {
 
 function wireEditForm(card, ev) {
   const form = card.querySelector('form.edit');
+  const isDraft = isDraftId(ev.id);
+
   card.querySelector('[data-action="cancel"]').addEventListener('click', () => {
+    if (isDraft) {
+      events = events.filter((e) => e.id !== ev.id);
+    }
     editingId = null;
     render();
   });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
     const body = {
-      id: ev.id,
       event_name: fd.get('event_name'),
       categories: fd.get('categories').split(',').map(s => s.trim()).filter(Boolean),
       location: fd.get('location'),
@@ -370,7 +402,13 @@ function wireEditForm(card, ev) {
       is_barrierfrei: fd.get('is_barrierfrei') === 'on',
       barrierfrei_info: fd.get('barrierfrei_info'),
     };
-    await apiCall('PATCH', body);
+    if (isDraft) {
+      body.status = 'pending';
+      await apiCall('POST', body);
+    } else {
+      body.id = ev.id;
+      await apiCall('PATCH', body);
+    }
     editingId = null;
     await init();
   });
