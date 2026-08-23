@@ -635,17 +635,27 @@ function nlEventCardHtml(ev) {
     ? `<a href="${attr(link)}" style="color:#0055a4; text-decoration:none;">${escapeHtml(ev.event_name || '')}</a>`
     : escapeHtml(ev.event_name || '');
 
-  return `
-<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px; font-weight:bold; color:#0055a4;">${escapeHtml(dateRange)}</p>
-<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:16px; font-weight:bold; color:#0055a4;">${titleHtml}</p>
-${ev.categories && ev.categories.length ? `<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px; font-style:italic; color:#0055a4;">${escapeHtml(ev.categories.join(', '))}</p>` : ''}
-${tags.length ? `<p style="margin:0 0 2px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px; color:#0055a4; font-weight:bold;">${escapeHtml(tags.join(' – '))}</p>` : ''}
-${link ? `<p style="margin:0 0 18px 0; font-family:Verdana, Geneva, sans-serif; font-size:13px;"><a href="${attr(link)}" style="color:#0055a4; font-weight:bold; text-decoration:none;">Mehr Info</a></p>` : `<p style="margin:0 0 18px 0;">&nbsp;</p>`}
-`;
+  const FS = 'font-family:Verdana, Geneva, sans-serif; font-size:16px;';
+
+  const parts = [];
+  parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold; color:#0055a4;">${escapeHtml(dateRange)}</p>`);
+  parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold; color:#0055a4;">${titleHtml}</p>`);
+  if (ev.categories && ev.categories.length) {
+    parts.push(`<p style="margin:0 0 2px 0; ${FS} font-style:italic; color:#0055a4;">${escapeHtml(ev.categories.join(', '))}</p>`);
+  }
+  if (tags.length) {
+    parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold; color:#0055a4;">${escapeHtml(tags.join(' – '))}</p>`);
+  }
+  if (link) {
+    parts.push(`<p style="margin:0 0 18px 0; ${FS}"><a href="${attr(link)}" style="color:#0055a4; font-weight:bold; text-decoration:none;">Mehr Info</a></p>`);
+  } else {
+    parts.push(`<p style="margin:0 0 18px 0;">&nbsp;</p>`);
+  }
+  return parts.join('');
 }
 
 function generateNewsletterHtml(selected) {
-  return selected.map(nlEventCardHtml).join('\n').trim();
+  return selected.map(nlEventCardHtml).join('').trim();
 }
 
 function escapeHtml(str) {
