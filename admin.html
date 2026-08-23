@@ -170,7 +170,16 @@ async function apiCall(method, body) {
     errorEl.textContent = 'Passwort abgelehnt — bitte erneut versuchen.';
     throw new Error('unauthorized');
   }
-  return res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    data = { error: `Serverfehler (${res.status})` };
+  }
+  if (!res.ok && !data.error) {
+    data.error = `Fehler ${res.status}: ${res.statusText}`;
+  }
+  return data;
 }
 
 async function init() {
@@ -271,17 +280,20 @@ function render() {
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
       if (!confirm('Dieses Event endgültig löschen?')) return;
-      await apiCall('DELETE', { id: ev.id });
+      const data = await apiCall('DELETE', { id: ev.id });
+      if (data.error) { alert('Fehler beim Löschen: ' + data.error); return; }
       await init();
     });
     const approveBtn = card.querySelector('[data-action="approve"]');
     if (approveBtn) approveBtn.addEventListener('click', async () => {
-      await apiCall('PATCH', { id: ev.id, status: 'approved' });
+      const data = await apiCall('PATCH', { id: ev.id, status: 'approved' });
+      if (data.error) { alert('Fehler: ' + data.error); return; }
       await init();
     });
     const unapproveBtn = card.querySelector('[data-action="unapprove"]');
     if (unapproveBtn) unapproveBtn.addEventListener('click', async () => {
-      await apiCall('PATCH', { id: ev.id, status: 'pending' });
+      const data = await apiCall('PATCH', { id: ev.id, status: 'pending' });
+      if (data.error) { alert('Fehler: ' + data.error); return; }
       await init();
     });
 
@@ -402,12 +414,17 @@ function wireEditForm(card, ev) {
       is_barrierfrei: fd.get('is_barrierfrei') === 'on',
       barrierfrei_info: fd.get('barrierfrei_info'),
     };
+    let data;
     if (isDraft) {
       body.status = 'pending';
-      await apiCall('POST', body);
+      data = await apiCall('POST', body);
     } else {
       body.id = ev.id;
-      await apiCall('PATCH', body);
+      data = await apiCall('PATCH', body);
+    }
+    if (data.error) {
+      alert('Fehler beim Speichern: ' + data.error);
+      return;
     }
     editingId = null;
     await init();
