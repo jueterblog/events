@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <header class="site-header">
   <a href="index.html" class="header-left">
     <img src="wordmark.png" alt="Jüterblog" class="logo-img">
@@ -21,25 +20,22 @@
     <a href="submit.html" class="btn btn-primary">Event einreichen</a>
   </div>
 </header>
-
 <section class="hero">
   <p>Kalender für ausgewählte Events in Jüterbog und Umgebung.</p>
 </section>
-
 <nav class="filters" id="filters">
   <button class="chip active" data-category="all">All</button>
 </nav>
-
 <nav class="month-filters" id="month-filters"></nav>
-
 <main class="event-list" id="event-list">
   <!-- Events load here -->
 </main>
-
 <div class="empty-state" id="empty-state" style="display:none">
   <p>Für diesen Filter gibt es noch keine Events.</p>
 </div>
-
+<div class="back-to-top-wrap" style="text-align:center; padding:24px 0;">
+  <button type="button" id="back-to-top" class="btn back-to-top" style="padding:8px 16px; font-size:14px; border:1px solid #43b262; border-radius:999px; background:#fdfdfd; color:#0055a4; cursor:pointer;">↑ Nach oben</button>
+</div>
 <footer class="site-footer">
   <div class="footer-links">
     <a href="about.html" class="footer-link">Konzept</a>
@@ -50,7 +46,6 @@
   </div>
   <p class="copyright">© 2026 Jüterblog</p>
 </footer>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="categories.js"></script>

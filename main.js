@@ -250,3 +250,11 @@ document.getElementById("event-list").addEventListener("click", (e) => {
   const isOpen = details.classList.toggle("open");
   e.target.textContent = isOpen ? "weniger anzeigen" : "mehr anzeigen";
 });
+
+const backToTopBtn = document.getElementById("back-to-top");
+if (backToTopBtn) {
+  backToTopBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
