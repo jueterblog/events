@@ -138,6 +138,7 @@ async function fetchEvents() {
   allEvents = data;
   buildMonthFilters();
   renderEvents();
+  scrollToHashEvent();
 }
 
 function renderEvents() {
@@ -180,6 +181,7 @@ function renderEvents() {
 
     const card = document.createElement("article");
     card.className = "event-card";
+    card.id = `event-${event.id}`;
     card.innerHTML = `
       <div class="event-header">
         <div class="date-badge">
@@ -215,6 +217,27 @@ function escapeHtml(str) {
 
 function escapeAttr(str) {
   return (str || "").replace(/"/g, "&quot;");
+}
+
+// If arriving via a link like jueter.blog/#event-123 (e.g. from the newsletter),
+// scroll to that event's card, expand its description, and briefly highlight it.
+function scrollToHashEvent() {
+  if (!location.hash) return;
+  const el = document.getElementById(location.hash.slice(1));
+  if (!el) return;
+
+  const details = el.querySelector('.event-details');
+  const toggle = el.querySelector('.desc-toggle');
+  if (details && toggle && !details.classList.contains('open')) {
+    details.classList.add('open');
+    toggle.textContent = 'weniger anzeigen';
+  }
+
+  el.style.transition = 'box-shadow 0.4s ease';
+  el.style.boxShadow = '0 0 0 3px #43b262';
+  setTimeout(() => { el.style.boxShadow = ''; }, 2500);
+
+  setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
 }
 
 buildFilterChips();
