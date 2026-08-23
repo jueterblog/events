@@ -621,10 +621,16 @@ document.getElementById('nl-copy').addEventListener('click', async () => {
   setTimeout(() => { confirmEl.style.display = 'none'; }, 2000);
 });
 
+const DE_WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+
+function deWeekday(dateStr) {
+  return DE_WEEKDAYS[new Date(dateStr + 'T00:00:00').getDay()];
+}
+
 function nlEventCardHtml(ev) {
   const dateRange = ev.event_end_date && ev.event_end_date !== ev.event_date
-    ? `${fmtDate(ev.event_date)} – ${fmtDate(ev.event_end_date)}`
-    : fmtDate(ev.event_date) + (ev.start_time ? ', ' + ev.start_time.slice(0, 5) + ' Uhr' : '');
+    ? `${deWeekday(ev.event_date)}, ${fmtDate(ev.event_date)} – ${deWeekday(ev.event_end_date)}, ${fmtDate(ev.event_end_date)}`
+    : `${deWeekday(ev.event_date)}, ${fmtDate(ev.event_date)}` + (ev.start_time ? ', ' + ev.start_time.slice(0, 5) + ' Uhr' : '');
 
   const tags = [];
   if (ev.is_free) tags.push('Kostenlos');
