@@ -14,9 +14,7 @@
 //                                   "Legacy anon, service_role API keys" tab -> service_role.
 //                                   Starts with "eyJ...". Keep secret, never send to browser.)
 //   ADMIN_PASSWORD                (add this one manually — pick any password)
-
 import { createClient } from '@supabase/supabase-js';
-
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_ADMIN_KEY,
@@ -28,7 +26,6 @@ const supabaseAdmin = createClient(
     },
   }
 );
-
 // Only these columns can be written from the admin page — protects id/created_at etc.
 const EDITABLE_FIELDS = [
   'event_name',
@@ -48,12 +45,10 @@ const EDITABLE_FIELDS = [
   'is_barrierfrei',
   'barrierfrei_info',
 ];
-
 function checkPassword(req) {
   const provided = req.headers['x-admin-password'];
   return provided && provided === process.env.ADMIN_PASSWORD;
 }
-
 function pickEditableFields(body) {
   const out = {};
   for (const key of EDITABLE_FIELDS) {
@@ -61,48 +56,54 @@ function pickEditableFields(body) {
   }
   return out;
 }
-
 export default async function handler(req, res) {
   if (!checkPassword(req)) {
     return res.status(401).json({ error: 'Invalid or missing admin password' });
   }
-
   if (req.method === 'GET') {
     const { data, error } = await supabaseAdmin
       .from('events')
       .select('*')
       .order('created_at', { ascending: false });
-
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ events: data });
   }
-
+  if (req.method === 'POST') {
+    const fields = pickEditableFields(req.body || {});
+    if (!fields.event_name) {
+      return res.status(400).json({ error: 'Missing event_name' });
+    }
+    if (!fields.status) fields.status = 'pending';
+    const now = new Date().toISOString();
+    fields.created_at = now;
+    fields.updated_at = now;
+    const { data, error } = await supabaseAdmin
+      .from('events')
+      .insert(fields)
+      .select();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(201).json({ event: data[0] });
+  }
   if (req.method === 'PATCH') {
     const { id, ...body } = req.body;
     if (!id) return res.status(400).json({ error: 'Missing event id' });
-
     const fields = pickEditableFields(body);
     fields.updated_at = new Date().toISOString();
-
     const { data, error } = await supabaseAdmin
       .from('events')
       .update(fields)
       .eq('id', id)
       .select();
-
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ event: data[0] });
   }
-
   if (req.method === 'DELETE') {
     const { id } = req.body;
     if (!id) return res.status(400).json({ error: 'Missing event id' });
-
     const { error } = await supabaseAdmin.from('events').delete().eq('id', id);
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ success: true });
   }
-
-  res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
+  res.setHeader('Allow', ['GET', 'POST', 'PATCH', 'DELETE']);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }
