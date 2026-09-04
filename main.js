@@ -207,6 +207,18 @@ function renderEvents() {
     `;
     listEl.appendChild(card);
   });
+
+  const backToTop = document.createElement("a");
+  backToTop.href = "#";
+  backToTop.id = "back-to-top";
+  backToTop.className = "back-to-top";
+  backToTop.style.cssText = "display:inline-block; background:none; border:none; padding:0; margin:16px 0 0; border-radius:0; box-shadow:none; font-family:inherit; font-size:inherit; color:#0055a4; font-weight:bold; text-decoration:underline;";
+  backToTop.textContent = "↑ Nach oben";
+  backToTop.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  listEl.appendChild(backToTop);
 }
 
 function escapeHtml(str) {
@@ -250,11 +262,3 @@ document.getElementById("event-list").addEventListener("click", (e) => {
   const isOpen = details.classList.toggle("open");
   e.target.textContent = isOpen ? "weniger anzeigen" : "mehr anzeigen";
 });
-
-const backToTopBtn = document.getElementById("back-to-top");
-if (backToTopBtn) {
-  backToTopBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-}
