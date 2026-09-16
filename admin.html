@@ -159,6 +159,7 @@
 <div id="app" style="display:none;">
   <div class="main-nav">
     <button data-view="events" class="active">Events</button>
+    <button data-view="archive">Archiv</button>
     <button data-view="newsletter">Newsletter</button>
   </div>
 
@@ -172,6 +173,14 @@
     <p id="loading" style="display:none;">Lädt…</p>
     <p id="empty" style="display:none;">Keine Events in dieser Ansicht.</p>
     <div id="list"></div>
+  </div>
+
+  <div id="archive-view" style="display:none;">
+    <h1>Archiv</h1>
+    <p class="details">Vergangene Events (nach Datum, neueste zuerst).</p>
+    <p id="archive-loading" style="display:none;" class="details">Lädt…</p>
+    <p id="archive-empty" style="display:none;" class="details">Keine vergangenen Events.</p>
+    <div id="archive-list"></div>
   </div>
 
   <div id="newsletter-view" style="display:none;">
@@ -219,17 +228,36 @@ const listEl = document.getElementById('list');
 const loadingEl = document.getElementById('loading');
 const emptyEl = document.getElementById('empty');
 const eventsView = document.getElementById('events-view');
+const archiveView = document.getElementById('archive-view');
 const newsletterView = document.getElementById('newsletter-view');
 
-document.querySelectorAll('.main-nav button').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.main-nav button').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    const view = btn.dataset.view;
-    eventsView.style.display = view === 'events' ? 'block' : 'none';
-    newsletterView.style.display = view === 'newsletter' ? 'block' : 'none';
-    if (view === 'newsletter') renderNewsletterSelect();
+function switchToView(view) {
+  document.querySelectorAll('.main-nav button').forEach((b) => {
+    b.classList.toggle('active', b.dataset.view === view);
   });
+  eventsView.style.display = view === 'events' ? 'block' : 'none';
+  archiveView.style.display = view === 'archive' ? 'block' : 'none';
+  newsletterView.style.display = view === 'newsletter' ? 'block' : 'none';
+  if (view === 'newsletter') renderNewsletterSelect();
+  if (view === 'archive') renderArchive();
+  if (view === 'events') render();
+}
+
+function getActiveView() {
+  const activeBtn = document.querySelector('.main-nav button.active');
+  return activeBtn ? activeBtn.dataset.view : 'events';
+}
+
+// Re-renders whichever of Events/Archiv is currently on screen, so edits,
+// approvals, etc. stay in sync no matter which view they were triggered from.
+function refreshActiveView() {
+  const view = getActiveView();
+  if (view === 'archive') renderArchive();
+  else if (view === 'events') render();
+}
+
+document.querySelectorAll('.main-nav button').forEach((btn) => {
+  btn.addEventListener('click', () => switchToView(btn.dataset.view));
 });
 
 document.getElementById('login-btn').addEventListener('click', () => {
@@ -296,7 +324,7 @@ async function init() {
     return;
   }
   loadingEl.style.display = 'none';
-  render();
+  refreshActiveView();
 }
 
 function fmtDate(d) {
@@ -308,20 +336,59 @@ function isDraftId(id) {
   return typeof id === 'string' && id.startsWith('draft-');
 }
 
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// An event counts as "past" once its last day (end date if multi-day,
+// otherwise its date) is before today.
+function isPastEvent(ev) {
+  const lastDay = ev.event_end_date || ev.event_date;
+  if (!lastDay) return false;
+  return lastDay < todayIso();
+}
+
 function render() {
-  const visible = filter === 'all' ? events : events.filter((e) => e.status === filter);
+  const base = filter === 'all' ? events : events.filter((e) => e.status === filter);
+  const visible = base
+    .filter((e) => !isPastEvent(e))
+    .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));
   listEl.innerHTML = '';
   emptyEl.style.display = visible.length === 0 ? 'block' : 'none';
 
   visible.forEach((ev) => {
+    const card = buildEventCard(ev, listEl);
+    listEl.appendChild(card);
+  });
+}
+
+function renderArchive() {
+  const archiveListEl = document.getElementById('archive-list');
+  const archiveLoadingEl = document.getElementById('archive-loading');
+  const archiveEmptyEl = document.getElementById('archive-empty');
+
+  const past = events
+    .filter(isPastEvent)
+    .sort((a, b) => (b.event_date || '').localeCompare(a.event_date || ''));
+
+  archiveLoadingEl.style.display = 'none';
+  archiveListEl.innerHTML = '';
+  archiveEmptyEl.style.display = past.length === 0 ? 'block' : 'none';
+
+  past.forEach((ev) => {
+    const card = buildEventCard(ev, archiveListEl);
+    archiveListEl.appendChild(card);
+  });
+}
+
+function buildEventCard(ev, containerEl) {
     const card = document.createElement('div');
     card.className = 'card';
 
     if (editingId === ev.id) {
       card.innerHTML = editFormHtml(ev);
-      listEl.appendChild(card);
       wireEditForm(card, ev);
-      return;
+      return card;
     }
 
     const dateRange = ev.event_end_date && ev.event_end_date !== ev.event_date
@@ -352,7 +419,7 @@ function render() {
 
     card.querySelector('[data-action="edit"]').addEventListener('click', () => {
       editingId = ev.id;
-      render();
+      refreshActiveView();
     });
     card.querySelector('[data-action="duplicate"]').addEventListener('click', () => {
       const draft = {
@@ -360,17 +427,19 @@ function render() {
         id: 'draft-' + Date.now(),
         status: 'pending',
         created_at: new Date().toISOString(),
+        // Duplicating always starts a fresh submission dated today, so it
+        // won't immediately land back in the archive.
+        event_date: todayIso(),
+        event_end_date: null,
       };
       const idx = events.findIndex((e) => e.id === ev.id);
       events.splice(idx + 1, 0, draft);
       editingId = draft.id;
-      if (filter !== 'all' && filter !== 'pending') {
-        filter = 'pending';
-        document.querySelectorAll('.tabs button').forEach((b) => {
-          b.classList.toggle('active', b.dataset.filter === 'pending');
-        });
-      }
-      render();
+      filter = 'pending';
+      document.querySelectorAll('.tabs button').forEach((b) => {
+        b.classList.toggle('active', b.dataset.filter === 'pending');
+      });
+      switchToView('events');
     });
     card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
       if (!confirm('Dieses Event endgültig löschen?')) return;
@@ -391,8 +460,7 @@ function render() {
       await init();
     });
 
-    listEl.appendChild(card);
-  });
+    return card;
 }
 
 function editFormHtml(ev) {
@@ -485,7 +553,7 @@ function wireEditForm(card, ev) {
       events = events.filter((e) => e.id !== ev.id);
     }
     editingId = null;
-    render();
+    refreshActiveView();
   });
 
   form.addEventListener('submit', async (e) => {
