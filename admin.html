@@ -711,6 +711,9 @@ function nlEventCardHtml(ev) {
 
   const parts = [];
   parts.push(`<p style="margin:0 0 2px 0; ${FS}">${escapeHtml(dateRange)}</p>`);
+  if (ev.location) {
+    parts.push(`<p style="margin:0 0 2px 0; ${FS}">${escapeHtml(ev.location)}</p>`);
+  }
   parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold;">${titleHtml}</p>`);
   if (ev.categories && ev.categories.length) {
     parts.push(`<p style="margin:0 0 2px 0; ${FS} font-style:italic;">${escapeHtml(ev.categories.join(', '))}</p>`);
