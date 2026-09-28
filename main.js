@@ -104,11 +104,30 @@ function updateActiveMonthChip() {
   });
 }
 
-function formatDateBadge(dateStr) {
+function formatDateBadge(dateStr, endDateStr) {
   const d = new Date(dateStr + "T00:00:00");
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
-  return { day, month };
+
+  if (endDateStr && endDateStr > dateStr) {
+    const end = new Date(endDateStr + "T00:00:00");
+    return { day, middle: "bis", bottom: String(end.getDate()).padStart(2, "0"), multi: true };
+  }
+  return { day, middle: "–", bottom: month, multi: false };
+}
+
+const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+function formatFullDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${WEEKDAYS[d.getDay()]}, ${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+}
+
+function formatDateLine(dateStr, endDateStr) {
+  if (endDateStr && endDateStr > dateStr) {
+    return `${formatFullDate(dateStr)} – ${formatFullDate(endDateStr)}`;
+  }
+  return formatFullDate(dateStr);
 }
 
 function formatTimeRange(start, end) {
@@ -167,7 +186,7 @@ function renderEvents() {
   emptyEl.style.display = "none";
 
   filtered.forEach((event, index) => {
-    const { day, month } = formatDateBadge(event.event_date);
+    const { day, middle, bottom, multi } = formatDateBadge(event.event_date, event.event_end_date);
 
     const categoryLine = (event.categories || []).join(' · ');
 
@@ -184,14 +203,15 @@ function renderEvents() {
     card.id = `event-${event.id}`;
     card.innerHTML = `
       <div class="event-header">
-        <div class="date-badge">
+        <div class="date-badge${multi ? ' multi' : ''}">
           <div class="day">${day}</div>
-          <div class="dash">–</div>
-          <div class="month">${month}</div>
+          <div class="dash">${middle}</div>
+          <div class="month">${bottom}</div>
         </div>
         <div class="event-title-group">
           <p class="event-cats">${escapeHtml(categoryLine)}</p>
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
+          <p class="event-date-line">${formatDateLine(event.event_date, event.event_end_date)}</p>
           <div class="event-meta"><span class="event-time">${formatTimeRange(event.start_time, event.end_time)}</span><span class="event-meta-sep"> · </span><a class="event-link event-location" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         </div>
       </div>
