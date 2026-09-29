@@ -719,7 +719,12 @@ function nlEventCardHtml(ev) {
 
   const parts = [];
   parts.push(`<p style="margin:0 0 2px 0; ${FS}">${escapeHtml(dateRange)}</p>`);
-  const titleLine = ev.location ? `${titleHtml} (${escapeHtml(ev.location)})` : titleHtml;
+  const loc = (ev.location || '').trim();
+  const titleLine = !loc
+    ? titleHtml
+    : loc.includes('(')
+      ? `${titleHtml} – ${escapeHtml(loc)}`
+      : `${titleHtml} (${escapeHtml(loc)})`;
   parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold;">${titleLine}</p>`);
   if (ev.categories && ev.categories.length) {
     parts.push(`<p style="margin:0 0 2px 0; ${FS} font-style:italic;">${escapeHtml(ev.categories.join(', '))}</p>`);
