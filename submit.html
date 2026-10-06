@@ -52,6 +52,13 @@
       </div>
       <label for="end_time">Ende <span class="hint">(optional)</span></label>
       <input type="time" id="end_time">
+      <label for="recurrence">Wiederholung <span class="hint">(optional)</span></label>
+      <select id="recurrence">
+        <option value="">Einmalig</option>
+        <option value="weekly">Wöchentlich</option>
+        <option value="biweekly">Alle 2 Wochen</option>
+        <option value="monthly">Monatlich</option>
+      </select>
       <label for="location">Ort *</label>
       <input type="text" id="location" required maxlength="120" placeholder="z. B. Stadthalle Jüterbog">
       <label for="address">Adresse *</label>

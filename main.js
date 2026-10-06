@@ -118,6 +118,12 @@ function formatDateBadge(dateStr, endDateStr) {
 
 const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
+const RECURRENCE_LABELS = {
+  weekly: "wöchentlich",
+  biweekly: "alle 2 Wochen",
+  monthly: "monatlich",
+};
+
 function formatFullDate(dateStr) {
   const d = new Date(dateStr + "T00:00:00");
   return `${WEEKDAYS[d.getDay()]}, ${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
@@ -194,6 +200,9 @@ function renderEvents() {
     if (event.is_free) statusLabels.push("kostenlos");
     if (event.is_barrierfrei) statusLabels.push("barrierefrei");
     const statusHtml = statusLabels.map(label => `<span>${label}</span>`).join('');
+    const recurrenceHtml = RECURRENCE_LABELS[event.recurrence]
+      ? `<div class="event-recurrence" style="font-weight:700;">${RECURRENCE_LABELS[event.recurrence]}</div>`
+      : '';
 
     const mapsQuery = encodeURIComponent(event.address);
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
@@ -224,6 +233,7 @@ function renderEvents() {
         <button type="button" class="desc-toggle">mehr anzeigen</button>
       </div>
       ${statusHtml ? `<div class="event-status">${statusHtml}</div>` : ''}
+      ${recurrenceHtml}
     `;
     listEl.appendChild(card);
   });

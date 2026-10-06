@@ -71,6 +71,7 @@ document.getElementById("event-form").addEventListener("submit", async (e) => {
     event_end_date: multidayCheckbox.checked ? (endDateVal || null) : null, // NEW
     start_time: document.getElementById("start_time").value,
     end_time: document.getElementById("end_time").value || null,
+    recurrence: document.getElementById("recurrence").value || null,
     location: document.getElementById("location").value.trim(),
     address: document.getElementById("address").value.trim(),
     description: descField.value.trim(),

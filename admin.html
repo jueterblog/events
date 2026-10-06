@@ -88,6 +88,7 @@
   form.edit input[type="text"],
   form.edit input[type="date"],
   form.edit input[type="time"],
+  form.edit select,
   form.edit textarea {
     width: 100%;
     box-sizing: border-box;
@@ -381,6 +382,42 @@ function renderArchive() {
   });
 }
 
+const RECURRENCE_LABELS = {
+  weekly: 'Wöchentlich',
+  biweekly: 'Alle 2 Wochen',
+  monthly: 'Monatlich',
+};
+const MAX_OCCURRENCES = 26;
+
+// Returns [{event_date, event_end_date}, ...] for every occurrence from the
+// start date up to and including `untilIso`. Multi-day events keep their length.
+// Monthly = same day of the month (clamped to the last day in shorter months).
+function expandOccurrences(startIso, endIso, rule, untilIso) {
+  const DAY = 86400000;
+  const start = new Date(startIso + 'T00:00:00Z');
+  const until = new Date(untilIso + 'T00:00:00Z');
+  const span = endIso ? new Date(endIso + 'T00:00:00Z') - start : null;
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const out = [];
+  for (let i = 0; i < MAX_OCCURRENCES; i++) {
+    let d;
+    if (rule === 'weekly') d = new Date(start.getTime() + 7 * i * DAY);
+    else if (rule === 'biweekly') d = new Date(start.getTime() + 14 * i * DAY);
+    else {
+      const y = start.getUTCFullYear();
+      const m = start.getUTCMonth() + i;
+      const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      d = new Date(Date.UTC(y, m, Math.min(start.getUTCDate(), lastDay)));
+    }
+    if (d > until) break;
+    out.push({
+      event_date: iso(d),
+      event_end_date: span != null ? iso(new Date(d.getTime() + span)) : null,
+    });
+  }
+  return out;
+}
+
 function buildEventCard(ev, containerEl) {
     const card = document.createElement('div');
     card.className = 'card';
@@ -404,6 +441,7 @@ function buildEventCard(ev, containerEl) {
         ${dateRange}${ev.start_time ? ' · ' + ev.start_time.slice(0,5) : ''}
         ${ev.location ? ' · ' + escapeHtml(ev.location) : ''}
         ${ev.categories && ev.categories.length ? ' · ' + escapeHtml(ev.categories.join(', ')) : ''}
+        ${RECURRENCE_LABELS[ev.recurrence] ? ' · <strong>' + RECURRENCE_LABELS[ev.recurrence] + '</strong>' : ''}
       </div>
       <div class="details">${escapeHtml(ev.description || '')}</div>
       <div class="actions">
@@ -431,6 +469,7 @@ function buildEventCard(ev, containerEl) {
         // won't immediately land back in the archive.
         event_date: todayIso(),
         event_end_date: null,
+        recurrence_group_id: null,
       };
       const idx = events.findIndex((e) => e.id === ev.id);
       events.splice(idx + 1, 0, draft);
@@ -449,8 +488,18 @@ function buildEventCard(ev, containerEl) {
     });
     const approveBtn = card.querySelector('[data-action="approve"]');
     if (approveBtn) approveBtn.addEventListener('click', async () => {
-      const data = await apiCall('PATCH', { id: ev.id, status: 'approved' });
-      if (data.error) { alert('Fehler: ' + data.error); return; }
+      const ids = [ev.id];
+      if (ev.recurrence_group_id) {
+        const others = events.filter((e) =>
+          e.recurrence_group_id === ev.recurrence_group_id && e.id !== ev.id && e.status !== 'approved');
+        if (others.length && confirm(`Alle ${others.length + 1} noch nicht freigegebenen Termine dieser Serie freigeben?`)) {
+          ids.push(...others.map((e) => e.id));
+        }
+      }
+      for (const id of ids) {
+        const data = await apiCall('PATCH', { id, status: 'approved' });
+        if (data.error) { alert('Fehler: ' + data.error); break; }
+      }
       await init();
     });
     const unapproveBtn = card.querySelector('[data-action="unapprove"]');
@@ -501,6 +550,22 @@ function editFormHtml(ev) {
         <div>
           <label>Ende</label>
           <input type="time" name="end_time" value="${attr((ev.end_time||'').slice(0,5))}" />
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>Wiederholung</label>
+          <select name="recurrence">
+            <option value="" ${!ev.recurrence ? 'selected' : ''}>Einmalig</option>
+            ${Object.entries(RECURRENCE_LABELS).map(([k, v]) =>
+              `<option value="${k}" ${ev.recurrence === k ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          ${ev.recurrence_group_id
+            ? '<label>Serie</label><div style="font-size:13px; color:#666; padding-top:6px;">Teil einer Serie — jeder Termin wird einzeln bearbeitet.</div>'
+            : '<label>Wiederholen bis</label><input type="date" name="recurrence_until" />'}
         </div>
       </div>
 
@@ -575,14 +640,55 @@ function wireEditForm(card, ev) {
       is_free: fd.get('is_free') === 'on',
       is_barrierfrei: fd.get('is_barrierfrei') === 'on',
       barrierfrei_info: fd.get('barrierfrei_info'),
+      recurrence: fd.get('recurrence') || null,
     };
+
+    // Optional series: one separate event row per occurrence, linked by recurrence_group_id.
+    const untilIso = fd.get('recurrence_until') || null;
+    let occurrences = null;
+    if (body.recurrence && untilIso && !ev.recurrence_group_id) {
+      if (!body.event_date) { alert('Bitte zuerst ein Datum angeben.'); return; }
+      if (untilIso < body.event_date) { alert('„Wiederholen bis" darf nicht vor dem Datum liegen.'); return; }
+      occurrences = expandOccurrences(body.event_date, body.event_end_date, body.recurrence, untilIso);
+      if (occurrences.length >= MAX_OCCURRENCES) {
+        if (!confirm(`Es werden maximal ${MAX_OCCURRENCES} Termine angelegt. Fortfahren?`)) return;
+      } else if (occurrences.length > 1) {
+        if (!confirm(`${occurrences.length} Termine anlegen?`)) return;
+      }
+      if (occurrences.length > 1) body.recurrence_group_id = crypto.randomUUID();
+      else occurrences = null;
+    }
+
     let data;
     if (isDraft) {
       body.status = 'pending';
-      data = await apiCall('POST', body);
+      if (occurrences) {
+        for (let i = 0; i < occurrences.length; i++) {
+          data = await apiCall('POST', { ...body, ...occurrences[i] });
+          if (data.error) {
+            alert(`Fehler beim Speichern (Termin ${i + 1} von ${occurrences.length}): ` + data.error);
+            await init();
+            return;
+          }
+        }
+      } else {
+        data = await apiCall('POST', body);
+      }
     } else {
       body.id = ev.id;
       data = await apiCall('PATCH', body);
+      // The edited event stays occurrence #1; the remaining dates become new rows with the same status.
+      if (!data.error && occurrences) {
+        for (let i = 1; i < occurrences.length; i++) {
+          const { id, ...rest } = body;
+          data = await apiCall('POST', { ...rest, ...occurrences[i], status: ev.status || 'pending' });
+          if (data.error) {
+            alert(`Fehler beim Speichern (Termin ${i + 1} von ${occurrences.length}): ` + data.error);
+            await init();
+            return;
+          }
+        }
+      }
     }
     if (data.error) {
       alert('Fehler beim Speichern: ' + data.error);
@@ -731,6 +837,9 @@ function nlEventCardHtml(ev) {
   }
   if (tags.length) {
     parts.push(`<p style="margin:0 0 2px 0; ${FS}">${escapeHtml(tags.join(' – '))}</p>`);
+  }
+  if (RECURRENCE_LABELS[ev.recurrence]) {
+    parts.push(`<p style="margin:0 0 2px 0; ${FS} font-weight:bold;">${RECURRENCE_LABELS[ev.recurrence]}</p>`);
   }
   parts.push(`<p style="margin:0 0 18px 0; ${FS}"><a href="${attr(cardLink)}" style="color:#0055a4; text-decoration:underline;">Mehr Info</a></p>`);
   return parts.join('');
