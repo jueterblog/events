@@ -44,6 +44,8 @@ const EDITABLE_FIELDS = [
   'address',
   'is_barrierfrei',
   'barrierfrei_info',
+  'recurrence',
+  'recurrence_group_id',
 ];
 function checkPassword(req) {
   const provided = req.headers['x-admin-password'];
