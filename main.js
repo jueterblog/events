@@ -69,17 +69,17 @@ function buildExtraFilters() {
   });
   filtersEl.appendChild(barrierfreiBtn);
 
-  // Divider + pill link to the Angebote page
+  // Divider + pill link to the Immer wieder page
   const divider2 = document.createElement("span");
   divider2.className = "filter-divider";
   divider2.innerHTML = `<img src="sprout.png" alt="">`;
   filtersEl.appendChild(divider2);
 
-  const angeboteLink = document.createElement("a");
-  angeboteLink.className = "chip";
-  angeboteLink.href = "immer-wieder.html";
-  angeboteLink.textContent = "Immer wieder";
-  filtersEl.appendChild(angeboteLink);
+  const immerWiederLink = document.createElement("a");
+  immerWiederLink.className = "chip";
+  immerWiederLink.href = "immer-wieder.html";
+  immerWiederLink.textContent = "Immer wieder";
+  filtersEl.appendChild(immerWiederLink);
 }
 
 function buildMonthFilters() {
@@ -154,6 +154,21 @@ function formatTimeRange(start, end) {
   return `ab ${fmt(start)}`;
 }
 
+// Weekly events are stored as one row per week. In the calendar each weekly series
+// appears only once (its next date); all of them are listed on immer-wieder.html.
+function collapseWeekly(list) {
+  const seen = new Set();
+  return list.filter(ev => {
+    if (ev.recurrence !== "weekly") return true;
+    const key = ev.recurrence_group_id || ev.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+const WEEKDAYS_LONG = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
 async function fetchEvents() {
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
 
@@ -161,7 +176,6 @@ async function fetchEvents() {
     .from("events")
     .select("*")
     .eq("status", "approved")
-    .is("recurrence", null) // recurring events live on immer-wieder.html
     .gte("event_date", today)
     .order("event_date", { ascending: true })
     .order("start_time", { ascending: true });
@@ -173,7 +187,7 @@ async function fetchEvents() {
     return;
   }
 
-  allEvents = data;
+  allEvents = collapseWeekly(data);
   buildMonthFilters();
   renderEvents();
   scrollToHashEvent();
@@ -213,9 +227,15 @@ function renderEvents() {
     if (event.is_free) statusLabels.push("kostenlos");
     if (event.is_barrierfrei) statusLabels.push("barrierefrei");
     const statusHtml = statusLabels.map(label => `<span>${label}</span>`).join('');
-    const recurrenceHtml = RECURRENCE_LABELS[event.recurrence]
-      ? `<div class="event-recurrence" style="font-weight:700;">${RECURRENCE_LABELS[event.recurrence]}</div>`
-      : '';
+    const isWeekly = event.recurrence === "weekly";
+    const recurrenceHtml = isWeekly
+      ? `<div class="event-recurrence"><a class="event-link" href="immer-wieder.html">alle regelmäßigen Angebote</a></div>`
+      : RECURRENCE_LABELS[event.recurrence]
+        ? `<div class="event-recurrence" style="font-weight:700;">${RECURRENCE_LABELS[event.recurrence]}</div>`
+        : '';
+    const dateLine = isWeekly
+      ? `Jeden ${WEEKDAYS_LONG[new Date(event.event_date + "T00:00:00").getDay()]}`
+      : formatDateLine(event.event_date, event.event_end_date);
 
     const mapsQuery = encodeURIComponent(event.address);
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
@@ -233,7 +253,7 @@ function renderEvents() {
         <div class="event-title-group">
           <p class="event-cats">${escapeHtml(categoryLine)}</p>
           <h2 class="event-title">${escapeHtml(event.event_name)}</h2>
-          <p class="event-date-line">${formatDateLine(event.event_date, event.event_end_date)}</p>
+          <p class="event-date-line">${dateLine}</p>
           <div class="event-meta"><span class="event-time">${formatTimeRange(event.start_time, event.end_time)}</span><span class="event-meta-sep"> · </span><a class="event-link event-location" href="${mapsUrl}" target="_blank" rel="noopener">${escapeHtml(event.location)}</a></div>
         </div>
       </div>

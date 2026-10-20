@@ -162,7 +162,7 @@
     <button data-view="events" class="active">Events</button>
     <button data-view="archive">Archiv</button>
     <button data-view="newsletter">Newsletter</button>
-    <button data-view="angebote">Immer wieder</button>
+    <button data-view="immerwieder">Immer wieder</button>
   </div>
 
   <div id="events-view">
@@ -185,11 +185,14 @@
     <div id="archive-list"></div>
   </div>
 
-  <div id="angebote-view" style="display:none;">
+  <div id="immerwieder-view" style="display:none;">
     <h1>Immer wieder</h1>
-    <p class="details">Regelmäßige Events (mit Wiederholung), eine Karte pro Serie. Änderungen gelten für alle kommenden Termine der Serie. Neue Serien legst du im Tab „Events“ an: Wiederholung wählen und „Wiederholen bis“ eintragen.</p>
-    <p id="angebote-empty" class="details" style="display:none;">Keine kommenden Termine.</p>
-    <div id="angebote-list"></div>
+    <p class="details">Regelmäßige Angebote für die Seite „Immer wieder“. Alles hier ist unabhängig von den Events und direkt bearbeitbar. „Verstecken“ nimmt einen Eintrag von der Seite, ohne ihn zu löschen.</p>
+    <div class="form-actions" style="margin-bottom:16px;">
+      <button class="btn btn-primary" id="iw-new">+ Neues Angebot</button>
+      <a class="btn" href="immer-wieder.html" target="_blank" rel="noopener">Seite ansehen</a>
+    </div>
+    <div id="iw-list"></div>
   </div>
 
   <div id="newsletter-view" style="display:none;">
@@ -228,7 +231,6 @@ let password = sessionStorage.getItem('admin_pw') || '';
 let events = [];
 let filter = 'pending';
 let editingId = null;
-let editingSeries = null;
 
 const loginScreen = document.getElementById('login-screen');
 const app = document.getElementById('app');
@@ -240,7 +242,7 @@ const emptyEl = document.getElementById('empty');
 const eventsView = document.getElementById('events-view');
 const archiveView = document.getElementById('archive-view');
 const newsletterView = document.getElementById('newsletter-view');
-const angeboteView = document.getElementById('angebote-view');
+const immerwiederView = document.getElementById('immerwieder-view');
 
 function switchToView(view) {
   document.querySelectorAll('.main-nav button').forEach((b) => {
@@ -249,8 +251,8 @@ function switchToView(view) {
   eventsView.style.display = view === 'events' ? 'block' : 'none';
   archiveView.style.display = view === 'archive' ? 'block' : 'none';
   newsletterView.style.display = view === 'newsletter' ? 'block' : 'none';
-  angeboteView.style.display = view === 'angebote' ? 'block' : 'none';
-  if (view === 'angebote') renderAngebote();
+  immerwiederView.style.display = view === 'immerwieder' ? 'block' : 'none';
+  if (view === 'immerwieder') loadImmerWieder();
   if (view === 'newsletter') renderNewsletterSelect();
   if (view === 'archive') renderArchive();
   if (view === 'events') render();
@@ -266,7 +268,6 @@ function getActiveView() {
 function refreshActiveView() {
   const view = getActiveView();
   if (view === 'archive') renderArchive();
-  else if (view === 'angebote') renderAngebote();
   else if (view === 'events') render();
 }
 
@@ -290,8 +291,8 @@ document.querySelectorAll('.tabs button').forEach((btn) => {
   });
 });
 
-async function apiCall(method, body) {
-  const res = await fetch(API, {
+async function apiCall(method, body, url = API) {
+  const res = await fetch(url, {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -324,7 +325,6 @@ async function init() {
   loadingEl.style.display = 'block';
   emptyEl.textContent = 'Keine Events in dieser Ansicht.';
   editingId = null;
-  editingSeries = null;
   try {
     const data = await apiCall('GET');
     if (data.error) {
@@ -713,181 +713,220 @@ function wireEditForm(card, ev) {
   });
 }
 
-// ---------- Angebote (recurring events, one card per series) ----------
+// ---------- Immer wieder (regular offers, fully editable) ----------
 
-function seriesKey(ev) { return ev.recurrence_group_id || ev.id; }
+const IW_API = '/api/admin/immer-wieder';
+const IW_DAYS = ['', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+const IW_REC = { weekly: 'Wöchentlich', biweekly: 'Alle 2 Wochen', monthly: 'Monatlich' };
+const IW_NTH = { '1': '1.', '2': '2.', '3': '3.', '4': '4.', last: 'letzter' };
+let iwItems = [];
+let iwEditing = null; // item id, or 'new'
 
-function sortKey(e) { return `${e.event_date || ''}T${(e.start_time || '00:00').slice(0, 5)}`; }
-
-// Upcoming recurring events grouped into series. Each series is an array of rows,
-// earliest first, so rows[0] is the next date.
-function getSeries() {
-  const rows = events
-    .filter((e) => e.recurrence && !isDraftId(e.id) && !isPastEvent(e))
-    .sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
-  const groups = new Map();
-  rows.forEach((e) => {
-    const k = seriesKey(e);
-    if (!groups.has(k)) groups.set(k, []);
-    groups.get(k).push(e);
-  });
-  return Array.from(groups.values());
+async function loadImmerWieder() {
+  const listEl = document.getElementById('iw-list');
+  listEl.innerHTML = '<p class="details">Lädt…</p>';
+  try {
+    const data = await apiCall('GET', undefined, IW_API);
+    if (data.error) { listEl.innerHTML = '<p class="details">Fehler: ' + escapeHtml(data.error) + '</p>'; return; }
+    iwItems = data.items || [];
+    renderImmerWieder();
+  } catch (e) {
+    // unauthorized: apiCall already showed the login screen
+  }
 }
 
-function renderAngebote() {
-  const listEl = document.getElementById('angebote-list');
-  const emptyEl = document.getElementById('angebote-empty');
-  const series = getSeries();
+function iwWhenText(o) {
+  const day = IW_DAYS[o.weekday] || '';
+  const nth = o.recurrence === 'monthly' && o.month_week ? ` (${IW_NTH[o.month_week]} im Monat)` : '';
+  const time = o.start_time ? ', ' + o.start_time.slice(0, 5) + (o.end_time ? '–' + o.end_time.slice(0, 5) : '') : '';
+  return `${IW_REC[o.recurrence] || ''} · ${day}${nth}${time}`;
+}
+
+function renderImmerWieder() {
+  const listEl = document.getElementById('iw-list');
   listEl.innerHTML = '';
-  emptyEl.style.display = series.length === 0 ? 'block' : 'none';
-  series.forEach((rows) => listEl.appendChild(buildSeriesCard(rows)));
-}
 
-function buildSeriesCard(rows) {
-  const next = rows[0];
-  const last = rows[rows.length - 1];
-  const key = seriesKey(next);
-  const card = document.createElement('div');
-  card.className = 'card';
+  if (iwEditing === 'new') listEl.appendChild(buildIwForm({}));
 
-  if (editingSeries === key) {
-    card.innerHTML = seriesFormHtml(next, rows.length);
-    wireSeriesForm(card, rows);
-    return card;
+  if (iwItems.length === 0 && iwEditing !== 'new') {
+    listEl.innerHTML = '<p class="details">Noch keine Einträge. Mit „+ Neues Angebot“ anlegen.</p>';
+    return;
   }
 
-  const approvedCount = rows.filter((r) => r.status === 'approved').length;
-  const statusText = approvedCount === rows.length ? 'approved' : approvedCount === 0 ? 'pending' : 'teils freigegeben';
-  const time = next.start_time ? ', ' + next.start_time.slice(0, 5) + (next.end_time ? '–' + next.end_time.slice(0, 5) : '') : '';
+  iwItems.forEach((o) => {
+    if (iwEditing === o.id) { listEl.appendChild(buildIwForm(o)); return; }
 
-  card.innerHTML = `
-    <div class="card-top">
-      <strong>${escapeHtml(next.event_name || '(ohne Titel)')}</strong>
-      <span class="meta">${rows.length} kommende Termine</span>
-    </div>
-    <div class="details">
-      <strong>${RECURRENCE_LABELS[next.recurrence]}</strong> · ${deWeekday(next.event_date)}${time}
-      ${next.location ? ' · ' + escapeHtml(next.location) : ''}
-      ${next.categories && next.categories.length ? ' · ' + escapeHtml(next.categories.join(', ')) : ''}
-    </div>
-    <div class="details">Nächster Termin ${fmtDate(next.event_date)}, letzter Termin ${fmtDate(last.event_date)}</div>
-    ${approvedCount < rows.length ? '<div class="details">Nicht alle Termine sind freigegeben, im Tab „Events“ freigeben.</div>' : ''}
-    <div class="actions">
-      <span class="status-pill ${statusText === 'approved' ? 'status-approved' : ''}">${statusText}</span>
-      <button class="btn" data-action="edit">Bearbeiten</button>
-      <button class="btn btn-danger" data-action="delete">Serie löschen</button>
-    </div>
-  `;
-
-  card.querySelector('[data-action="edit"]').addEventListener('click', () => {
-    editingSeries = key;
-    renderAngebote();
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-top">
+        <strong>${escapeHtml(o.name)}</strong>
+        <span class="meta">${escapeHtml(o.location || '')}</span>
+      </div>
+      <div class="details">${escapeHtml(iwWhenText(o))}${o.categories && o.categories.length ? ' · ' + escapeHtml(o.categories.join(', ')) : ''}</div>
+      ${o.when_override ? `<div class="details">Eigener Text: ${escapeHtml(o.when_override)}</div>` : ''}
+      <div class="actions">
+        <span class="status-pill ${o.active ? 'status-approved' : ''}">${o.active ? 'sichtbar' : 'versteckt'}</span>
+        <button class="btn" data-a="edit">Bearbeiten</button>
+        <button class="btn" data-a="dup">Duplizieren</button>
+        <button class="btn" data-a="toggle">${o.active ? 'Verstecken' : 'Anzeigen'}</button>
+        <button class="btn btn-danger" data-a="del">Löschen</button>
+      </div>
+    `;
+    card.querySelector('[data-a="edit"]').addEventListener('click', () => { iwEditing = o.id; renderImmerWieder(); });
+    card.querySelector('[data-a="dup"]').addEventListener('click', async () => {
+      const { id, created_at, updated_at, ...copy } = o;
+      const data = await apiCall('POST', { ...copy, name: o.name + ' (Kopie)', active: false }, IW_API);
+      if (data.error) return alert('Fehler: ' + data.error);
+      await loadImmerWieder();
+    });
+    card.querySelector('[data-a="toggle"]').addEventListener('click', async () => {
+      const data = await apiCall('PATCH', { id: o.id, active: !o.active }, IW_API);
+      if (data.error) return alert('Fehler: ' + data.error);
+      await loadImmerWieder();
+    });
+    card.querySelector('[data-a="del"]').addEventListener('click', async () => {
+      if (!confirm(`„${o.name}“ endgültig löschen?`)) return;
+      const data = await apiCall('DELETE', { id: o.id }, IW_API);
+      if (data.error) return alert('Fehler: ' + data.error);
+      await loadImmerWieder();
+    });
+    listEl.appendChild(card);
   });
-  card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-    if (!confirm(`Alle ${rows.length} kommenden Termine von „${next.event_name}“ endgültig löschen?`)) return;
-    for (const r of rows) {
-      const data = await apiCall('DELETE', { id: r.id });
-      if (data.error) { alert('Fehler beim Löschen: ' + data.error); break; }
-    }
-    await init();
-  });
-  return card;
 }
 
-function seriesFormHtml(ev, count) {
-  const k = attr(seriesKey(ev));
-  return `
+function iwOptions(map, selected) {
+  return Object.entries(map).map(([v, label]) => `<option value="${v}" ${String(selected) === v ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+function buildIwForm(o) {
+  const isNew = !o.id;
+  const k = o.id || 'new';
+  const dayOptions = [1, 2, 3, 4, 5, 6, 7].map((d) => `<option value="${d}" ${o.weekday === d ? 'selected' : ''}>${IW_DAYS[d]}</option>`).join('');
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  wrap.innerHTML = `
     <form class="edit">
-      <span class="status-pill status-new">Gilt für alle ${count} kommenden Termine</span>
-      <label>Name der Veranstaltung</label>
-      <input type="text" name="event_name" value="${attr(ev.event_name)}" />
+      <span class="status-pill status-new">${isNew ? 'Neues Angebot' : 'Angebot bearbeiten'}</span>
+      <label>Name</label>
+      <input type="text" name="name" value="${attr(o.name)}" required />
 
       <div class="row2">
         <div>
-          <label>Kategorien (Komma-getrennt)</label>
-          <input type="text" name="categories" value="${attr((ev.categories || []).join(', '))}" />
+          <label>Rhythmus</label>
+          <select name="recurrence">${iwOptions(IW_REC, o.recurrence || 'weekly')}</select>
         </div>
         <div>
-          <label>Ort</label>
-          <input type="text" name="location" value="${attr(ev.location)}" />
+          <label>Wochentag</label>
+          <select name="weekday">${dayOptions}</select>
         </div>
       </div>
+
+      <div id="iw-monthweek-${k}">
+        <label>Welcher im Monat? (nur bei „Monatlich“)</label>
+        <select name="month_week">${iwOptions(IW_NTH, o.month_week || 'last')}</select>
+      </div>
+
+      <label>Eigener Text für den Tag (optional)</label>
+      <input type="text" name="when_override" value="${attr(o.when_override)}" placeholder="z. B. In der Regel am letzten Donnerstag im Monat" />
+      <p class="details">Ersetzt die automatische Zeile (z. B. „Jeden Freitag“). Die Uhrzeit wird immer angehängt.</p>
 
       <div class="row2">
         <div>
           <label>Beginn</label>
-          <input type="time" name="start_time" value="${attr((ev.start_time || '').slice(0, 5))}" />
+          <input type="time" name="start_time" value="${attr((o.start_time || '').slice(0, 5))}" />
         </div>
         <div>
           <label>Ende</label>
-          <input type="time" name="end_time" value="${attr((ev.end_time || '').slice(0, 5))}" />
+          <input type="time" name="end_time" value="${attr((o.end_time || '').slice(0, 5))}" />
         </div>
       </div>
 
-      <label>Adresse</label>
-      <input type="text" name="address" value="${attr(ev.address)}" />
+      <label>Kategorien (Komma-getrennt)</label>
+      <input type="text" name="categories" value="${attr((o.categories || []).join(', '))}" />
+
+      <div class="row2">
+        <div>
+          <label>Ort</label>
+          <input type="text" name="location" value="${attr(o.location)}" />
+        </div>
+        <div>
+          <label>Adresse</label>
+          <input type="text" name="address" value="${attr(o.address)}" />
+        </div>
+      </div>
 
       <label>Beschreibung</label>
-      <textarea name="description" rows="4">${escapeHtml(ev.description || '')}</textarea>
+      <textarea name="description" rows="4">${escapeHtml(o.description || '')}</textarea>
 
       <label>Link</label>
-      <input type="text" name="link" value="${attr(ev.link)}" />
+      <input type="text" name="link" value="${attr(o.link)}" />
 
       <div class="checkline">
-        <input type="checkbox" name="is_free" ${ev.is_free ? 'checked' : ''} id="s_free_${k}" />
-        <label for="s_free_${k}" style="margin:0;">Kostenlos</label>
+        <input type="checkbox" name="is_free" ${o.is_free ? 'checked' : ''} id="iw_free_${k}" />
+        <label for="iw_free_${k}" style="margin:0;">Kostenlos</label>
       </div>
       <div class="checkline">
-        <input type="checkbox" name="is_barrierfrei" ${ev.is_barrierfrei ? 'checked' : ''} id="s_bf_${k}" />
-        <label for="s_bf_${k}" style="margin:0;">Barrierefrei</label>
+        <input type="checkbox" name="is_barrierfrei" ${o.is_barrierfrei ? 'checked' : ''} id="iw_bf_${k}" />
+        <label for="iw_bf_${k}" style="margin:0;">Barrierefrei</label>
       </div>
 
       <label>Barrierefreiheit — Hinweis</label>
-      <input type="text" name="barrierfrei_info" value="${attr(ev.barrierfrei_info)}" />
+      <input type="text" name="barrierfrei_info" value="${attr(o.barrierfrei_info)}" />
 
-      <p class="details">Datum, Wochentag und Rhythmus ändern: Serie löschen und neu anlegen, oder einzelne Termine im Tab „Events“ bearbeiten.</p>
+      <div class="checkline">
+        <input type="checkbox" name="active" ${o.active === false ? '' : 'checked'} id="iw_active_${k}" />
+        <label for="iw_active_${k}" style="margin:0;">Auf der Seite sichtbar</label>
+      </div>
+
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Für alle Termine speichern</button>
-        <button type="button" class="btn" data-action="cancel">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Speichern</button>
+        <button type="button" class="btn" data-a="cancel">Abbrechen</button>
       </div>
     </form>
   `;
-}
 
-function wireSeriesForm(card, rows) {
-  const form = card.querySelector('form.edit');
-  card.querySelector('[data-action="cancel"]').addEventListener('click', () => {
-    editingSeries = null;
-    renderAngebote();
-  });
+  const form = wrap.querySelector('form.edit');
+  const monthWrap = wrap.querySelector(`#iw-monthweek-${k}`);
+  const syncMonth = () => { monthWrap.style.display = form.recurrence.value === 'monthly' ? 'block' : 'none'; };
+  form.recurrence.addEventListener('change', syncMonth);
+  syncMonth();
+
+  wrap.querySelector('[data-a="cancel"]').addEventListener('click', () => { iwEditing = null; renderImmerWieder(); });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
     const body = {
-      event_name: fd.get('event_name'),
-      categories: fd.get('categories').split(',').map((s) => s.trim()).filter(Boolean),
-      location: fd.get('location'),
+      name: fd.get('name').trim(),
+      recurrence: fd.get('recurrence'),
+      weekday: Number(fd.get('weekday')),
+      month_week: fd.get('recurrence') === 'monthly' ? fd.get('month_week') : null,
+      when_override: fd.get('when_override').trim() || null,
       start_time: fd.get('start_time') || null,
       end_time: fd.get('end_time') || null,
+      categories: fd.get('categories').split(',').map((s) => s.trim()).filter(Boolean),
+      location: fd.get('location'),
       address: fd.get('address'),
       description: fd.get('description'),
       link: fd.get('link'),
       is_free: fd.get('is_free') === 'on',
       is_barrierfrei: fd.get('is_barrierfrei') === 'on',
       barrierfrei_info: fd.get('barrierfrei_info'),
+      active: fd.get('active') === 'on',
     };
-    for (let i = 0; i < rows.length; i++) {
-      const data = await apiCall('PATCH', { id: rows[i].id, ...body });
-      if (data.error) {
-        alert(`Fehler beim Speichern (Termin ${i + 1} von ${rows.length}): ` + data.error);
-        await init();
-        return;
-      }
-    }
-    editingSeries = null;
-    await init();
+    const data = isNew
+      ? await apiCall('POST', body, IW_API)
+      : await apiCall('PATCH', { id: o.id, ...body }, IW_API);
+    if (data.error) return alert('Fehler beim Speichern: ' + data.error);
+    iwEditing = null;
+    await loadImmerWieder();
   });
+
+  return wrap;
 }
+
+document.getElementById('iw-new').addEventListener('click', () => { iwEditing = 'new'; renderImmerWieder(); });
 
 // ---------- Newsletter ----------
 
@@ -909,7 +948,7 @@ function renderNewsletterSelect() {
   const listEl = document.getElementById('nl-event-list');
   const emptyEl = document.getElementById('nl-empty');
   const approved = events
-    .filter((e) => e.status === 'approved' && !e.recurrence) // Angebote are not part of the monthly newsletter
+    .filter((e) => e.status === 'approved')
     .sort((a, b) => {
       const dtA = `${a.event_date || ''}T${(a.start_time || '00:00').slice(0, 5)}`;
       const dtB = `${b.event_date || ''}T${(b.start_time || '00:00').slice(0, 5)}`;
