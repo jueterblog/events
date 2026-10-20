@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angebote — Jüterblog</title>
+<link rel="icon" type="image/png" href="logo-mark.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <a href="index.html" class="header-left">
+    <img src="wordmark.png" alt="Jüterblog" class="logo-img">
+  </a>
+  <div class="header-center">
+    <img src="logo-mark.png" alt="" class="logo-mark">
+  </div>
+  <div class="header-right">
+    <a href="index.html" class="btn btn-outline">← Zurück zu den Events</a>
+  </div>
+</header>
+<section class="hero">
+  <h1>Angebote</h1>
+  <p class="intro-text">Regelmäßige Treffen und Angebote in Jüterbog und Umgebung.</p>
+</section>
+<main class="event-list" id="offer-list">
+  <!-- Angebote load here -->
+</main>
+<div class="empty-state" id="empty-state" style="display:none">
+  <p>Zurzeit sind keine Angebote eingetragen.</p>
+</div>
+<footer class="site-footer">
+  <div class="footer-links">
+    <a href="about.html" class="footer-link">Konzept</a>
+    <a href="mailto:jueterblog@gmail.com" class="footer-link">Kontakt</a>
+    <span class="filter-divider" style="margin: 0 14px;"><img src="sprout.png" alt=""></span>
+    <a href="https://www.instagram.com/jueterblog" target="_blank" rel="noopener noreferrer" class="footer-link">Instagram</a>
+    <a href="https://www.facebook.com/jueterblog" target="_blank" rel="noopener noreferrer" class="footer-link">Facebook</a>
+  </div>
+  <p class="copyright">© 2026 Jüterblog</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="angebote.js"></script>
+</body>
+</html>

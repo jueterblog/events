@@ -162,6 +162,7 @@
     <button data-view="events" class="active">Events</button>
     <button data-view="archive">Archiv</button>
     <button data-view="newsletter">Newsletter</button>
+    <button data-view="angebote">Angebote</button>
   </div>
 
   <div id="events-view">
@@ -182,6 +183,13 @@
     <p id="archive-loading" style="display:none;" class="details">Lädt…</p>
     <p id="archive-empty" style="display:none;" class="details">Keine vergangenen Events.</p>
     <div id="archive-list"></div>
+  </div>
+
+  <div id="angebote-view" style="display:none;">
+    <h1>Angebote</h1>
+    <p class="details">Regelmäßige Events (mit Wiederholung), eine Karte pro Serie. Änderungen gelten für alle kommenden Termine der Serie. Neue Angebote legst du im Tab „Events“ an: Wiederholung wählen und „Wiederholen bis“ eintragen.</p>
+    <p id="angebote-empty" class="details" style="display:none;">Keine kommenden Angebote.</p>
+    <div id="angebote-list"></div>
   </div>
 
   <div id="newsletter-view" style="display:none;">
@@ -220,6 +228,7 @@ let password = sessionStorage.getItem('admin_pw') || '';
 let events = [];
 let filter = 'pending';
 let editingId = null;
+let editingSeries = null;
 
 const loginScreen = document.getElementById('login-screen');
 const app = document.getElementById('app');
@@ -231,6 +240,7 @@ const emptyEl = document.getElementById('empty');
 const eventsView = document.getElementById('events-view');
 const archiveView = document.getElementById('archive-view');
 const newsletterView = document.getElementById('newsletter-view');
+const angeboteView = document.getElementById('angebote-view');
 
 function switchToView(view) {
   document.querySelectorAll('.main-nav button').forEach((b) => {
@@ -239,6 +249,8 @@ function switchToView(view) {
   eventsView.style.display = view === 'events' ? 'block' : 'none';
   archiveView.style.display = view === 'archive' ? 'block' : 'none';
   newsletterView.style.display = view === 'newsletter' ? 'block' : 'none';
+  angeboteView.style.display = view === 'angebote' ? 'block' : 'none';
+  if (view === 'angebote') renderAngebote();
   if (view === 'newsletter') renderNewsletterSelect();
   if (view === 'archive') renderArchive();
   if (view === 'events') render();
@@ -254,6 +266,7 @@ function getActiveView() {
 function refreshActiveView() {
   const view = getActiveView();
   if (view === 'archive') renderArchive();
+  else if (view === 'angebote') renderAngebote();
   else if (view === 'events') render();
 }
 
@@ -311,6 +324,7 @@ async function init() {
   loadingEl.style.display = 'block';
   emptyEl.textContent = 'Keine Events in dieser Ansicht.';
   editingId = null;
+  editingSeries = null;
   try {
     const data = await apiCall('GET');
     if (data.error) {
@@ -699,6 +713,182 @@ function wireEditForm(card, ev) {
   });
 }
 
+// ---------- Angebote (recurring events, one card per series) ----------
+
+function seriesKey(ev) { return ev.recurrence_group_id || ev.id; }
+
+function sortKey(e) { return `${e.event_date || ''}T${(e.start_time || '00:00').slice(0, 5)}`; }
+
+// Upcoming recurring events grouped into series. Each series is an array of rows,
+// earliest first, so rows[0] is the next date.
+function getSeries() {
+  const rows = events
+    .filter((e) => e.recurrence && !isDraftId(e.id) && !isPastEvent(e))
+    .sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+  const groups = new Map();
+  rows.forEach((e) => {
+    const k = seriesKey(e);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(e);
+  });
+  return Array.from(groups.values());
+}
+
+function renderAngebote() {
+  const listEl = document.getElementById('angebote-list');
+  const emptyEl = document.getElementById('angebote-empty');
+  const series = getSeries();
+  listEl.innerHTML = '';
+  emptyEl.style.display = series.length === 0 ? 'block' : 'none';
+  series.forEach((rows) => listEl.appendChild(buildSeriesCard(rows)));
+}
+
+function buildSeriesCard(rows) {
+  const next = rows[0];
+  const last = rows[rows.length - 1];
+  const key = seriesKey(next);
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  if (editingSeries === key) {
+    card.innerHTML = seriesFormHtml(next, rows.length);
+    wireSeriesForm(card, rows);
+    return card;
+  }
+
+  const approvedCount = rows.filter((r) => r.status === 'approved').length;
+  const statusText = approvedCount === rows.length ? 'approved' : approvedCount === 0 ? 'pending' : 'teils freigegeben';
+  const time = next.start_time ? ', ' + next.start_time.slice(0, 5) + (next.end_time ? '–' + next.end_time.slice(0, 5) : '') : '';
+
+  card.innerHTML = `
+    <div class="card-top">
+      <strong>${escapeHtml(next.event_name || '(ohne Titel)')}</strong>
+      <span class="meta">${rows.length} kommende Termine</span>
+    </div>
+    <div class="details">
+      <strong>${RECURRENCE_LABELS[next.recurrence]}</strong> · ${deWeekday(next.event_date)}${time}
+      ${next.location ? ' · ' + escapeHtml(next.location) : ''}
+      ${next.categories && next.categories.length ? ' · ' + escapeHtml(next.categories.join(', ')) : ''}
+    </div>
+    <div class="details">Nächster Termin ${fmtDate(next.event_date)}, letzter Termin ${fmtDate(last.event_date)}</div>
+    ${approvedCount < rows.length ? '<div class="details">Nicht alle Termine sind freigegeben, im Tab „Events“ freigeben.</div>' : ''}
+    <div class="actions">
+      <span class="status-pill ${statusText === 'approved' ? 'status-approved' : ''}">${statusText}</span>
+      <button class="btn" data-action="edit">Bearbeiten</button>
+      <button class="btn btn-danger" data-action="delete">Serie löschen</button>
+    </div>
+  `;
+
+  card.querySelector('[data-action="edit"]').addEventListener('click', () => {
+    editingSeries = key;
+    renderAngebote();
+  });
+  card.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+    if (!confirm(`Alle ${rows.length} kommenden Termine von „${next.event_name}“ endgültig löschen?`)) return;
+    for (const r of rows) {
+      const data = await apiCall('DELETE', { id: r.id });
+      if (data.error) { alert('Fehler beim Löschen: ' + data.error); break; }
+    }
+    await init();
+  });
+  return card;
+}
+
+function seriesFormHtml(ev, count) {
+  const k = attr(seriesKey(ev));
+  return `
+    <form class="edit">
+      <span class="status-pill status-new">Gilt für alle ${count} kommenden Termine</span>
+      <label>Name der Veranstaltung</label>
+      <input type="text" name="event_name" value="${attr(ev.event_name)}" />
+
+      <div class="row2">
+        <div>
+          <label>Kategorien (Komma-getrennt)</label>
+          <input type="text" name="categories" value="${attr((ev.categories || []).join(', '))}" />
+        </div>
+        <div>
+          <label>Ort</label>
+          <input type="text" name="location" value="${attr(ev.location)}" />
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label>Beginn</label>
+          <input type="time" name="start_time" value="${attr((ev.start_time || '').slice(0, 5))}" />
+        </div>
+        <div>
+          <label>Ende</label>
+          <input type="time" name="end_time" value="${attr((ev.end_time || '').slice(0, 5))}" />
+        </div>
+      </div>
+
+      <label>Adresse</label>
+      <input type="text" name="address" value="${attr(ev.address)}" />
+
+      <label>Beschreibung</label>
+      <textarea name="description" rows="4">${escapeHtml(ev.description || '')}</textarea>
+
+      <label>Link</label>
+      <input type="text" name="link" value="${attr(ev.link)}" />
+
+      <div class="checkline">
+        <input type="checkbox" name="is_free" ${ev.is_free ? 'checked' : ''} id="s_free_${k}" />
+        <label for="s_free_${k}" style="margin:0;">Kostenlos</label>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" name="is_barrierfrei" ${ev.is_barrierfrei ? 'checked' : ''} id="s_bf_${k}" />
+        <label for="s_bf_${k}" style="margin:0;">Barrierefrei</label>
+      </div>
+
+      <label>Barrierefreiheit — Hinweis</label>
+      <input type="text" name="barrierfrei_info" value="${attr(ev.barrierfrei_info)}" />
+
+      <p class="details">Datum, Wochentag und Rhythmus ändern: Serie löschen und neu anlegen, oder einzelne Termine im Tab „Events“ bearbeiten.</p>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Für alle Termine speichern</button>
+        <button type="button" class="btn" data-action="cancel">Abbrechen</button>
+      </div>
+    </form>
+  `;
+}
+
+function wireSeriesForm(card, rows) {
+  const form = card.querySelector('form.edit');
+  card.querySelector('[data-action="cancel"]').addEventListener('click', () => {
+    editingSeries = null;
+    renderAngebote();
+  });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = {
+      event_name: fd.get('event_name'),
+      categories: fd.get('categories').split(',').map((s) => s.trim()).filter(Boolean),
+      location: fd.get('location'),
+      start_time: fd.get('start_time') || null,
+      end_time: fd.get('end_time') || null,
+      address: fd.get('address'),
+      description: fd.get('description'),
+      link: fd.get('link'),
+      is_free: fd.get('is_free') === 'on',
+      is_barrierfrei: fd.get('is_barrierfrei') === 'on',
+      barrierfrei_info: fd.get('barrierfrei_info'),
+    };
+    for (let i = 0; i < rows.length; i++) {
+      const data = await apiCall('PATCH', { id: rows[i].id, ...body });
+      if (data.error) {
+        alert(`Fehler beim Speichern (Termin ${i + 1} von ${rows.length}): ` + data.error);
+        await init();
+        return;
+      }
+    }
+    editingSeries = null;
+    await init();
+  });
+}
+
 // ---------- Newsletter ----------
 
 const DE_MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
@@ -719,7 +909,7 @@ function renderNewsletterSelect() {
   const listEl = document.getElementById('nl-event-list');
   const emptyEl = document.getElementById('nl-empty');
   const approved = events
-    .filter((e) => e.status === 'approved')
+    .filter((e) => e.status === 'approved' && !e.recurrence) // Angebote are not part of the monthly newsletter
     .sort((a, b) => {
       const dtA = `${a.event_date || ''}T${(a.start_time || '00:00').slice(0, 5)}`;
       const dtB = `${b.event_date || ''}T${(b.start_time || '00:00').slice(0, 5)}`;

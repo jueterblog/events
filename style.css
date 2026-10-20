@@ -769,3 +769,32 @@ input[type="time"] {
   .category-option span { padding: 5px 11px; font-size: 15px; }
   input, select, textarea { font-size: 15px; padding: 10px 12px; }
 }
+
+/* ---------- Angebote ---------- */
+
+a.chip { display: inline-block; text-decoration: none; }
+
+.offer-body { display: flex; flex-direction: column; gap: 2px; }
+.offer-body p { margin: 0; line-height: 1.3; }
+.offer-title { font-weight: 700; }
+.offer-title .offer-name { text-transform: uppercase; }
+.offer-cats { font-style: italic; text-transform: lowercase; }
+.offer-rec { font-weight: 700; }
+.offer-details { margin: 10px 0 2px; }
+.offer-details[hidden] { display: none; }
+.offer-details .event-desc { margin-bottom: 8px; }
+.offer-body > p:last-child { margin-top: 6px; }
+
+.offer-more {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.offer-more:hover { opacity: 0.75; }
+.offer-more:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }

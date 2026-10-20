@@ -68,6 +68,18 @@ function buildExtraFilters() {
     renderEvents();
   });
   filtersEl.appendChild(barrierfreiBtn);
+
+  // Divider + pill link to the Angebote page
+  const divider2 = document.createElement("span");
+  divider2.className = "filter-divider";
+  divider2.innerHTML = `<img src="sprout.png" alt="">`;
+  filtersEl.appendChild(divider2);
+
+  const angeboteLink = document.createElement("a");
+  angeboteLink.className = "chip";
+  angeboteLink.href = "angebote.html";
+  angeboteLink.textContent = "Angebote";
+  filtersEl.appendChild(angeboteLink);
 }
 
 function buildMonthFilters() {
@@ -149,6 +161,7 @@ async function fetchEvents() {
     .from("events")
     .select("*")
     .eq("status", "approved")
+    .is("recurrence", null) // recurring events live on angebote.html
     .gte("event_date", today)
     .order("event_date", { ascending: true })
     .order("start_time", { ascending: true });
