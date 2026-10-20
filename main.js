@@ -77,8 +77,8 @@ function buildExtraFilters() {
 
   const angeboteLink = document.createElement("a");
   angeboteLink.className = "chip";
-  angeboteLink.href = "angebote.html";
-  angeboteLink.textContent = "Angebote";
+  angeboteLink.href = "immer-wieder.html";
+  angeboteLink.textContent = "Immer wieder";
   filtersEl.appendChild(angeboteLink);
 }
 
@@ -161,7 +161,7 @@ async function fetchEvents() {
     .from("events")
     .select("*")
     .eq("status", "approved")
-    .is("recurrence", null) // recurring events live on angebote.html
+    .is("recurrence", null) // recurring events live on immer-wieder.html
     .gte("event_date", today)
     .order("event_date", { ascending: true })
     .order("start_time", { ascending: true });
